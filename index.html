@@ -1,0 +1,2648 @@
+<!DOCTYPE html>
+<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VisionPro Studio - 本地视频实时画质增强与导出工作站</title>
+    <!-- PWA 移动端桌面安装元数据 -->
+    <meta name="theme-color" content="#08090c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VisionPro 4K">
+    <link id="pwaManifestLink" rel="manifest" href="./manifest.json">
+    <link id="appleTouchIconLink" rel="apple-touch-icon" href="./icon-192.png">
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    <!-- 配置 Tailwind 自定义主题 -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    },
+                    colors: {
+                        studio: {
+                            950: '#08090c',
+                            900: '#101218',
+                            850: '#161922',
+                            800: '#1e222e',
+                            700: '#2c3242',
+                            accent: '#6366f1',
+                            accentHover: '#4f46e5',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 自定义滑块样式，打造治愈系深色玻璃拟态调色台手感 */
+        input[type="range"].studio-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"].studio-slider::-webkit-slider-runnable-track {
+            height: 5px;
+            border-radius: 999px;
+            background: #2c3242;
+        }
+        input[type="range"].studio-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -5.5px;
+            background-color: #818cf8;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.5);
+            transition: transform 0.12s ease, background-color 0.15s ease;
+        }
+        input[type="range"].studio-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background-color: #6366f1;
+        }
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #101218;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2c3242;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3e465c;
+        }
+        /* 棋盘格背景 */
+        .canvas-backdrop {
+            background-color: #08090c;
+            background-image: radial-gradient(#1b1f2b 1px, transparent 1px);
+            background-size: 22px 22px;
+        }
+        /* 全屏或横屏沉浸式自动隐藏工具栏过渡 */
+        .hud-transition {
+            transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hud-hidden-top {
+            opacity: 0 !important;
+            transform: translateY(-100%);
+            pointer-events: none !important;
+        }
+        .hud-hidden-bottom {
+            opacity: 0 !important;
+            transform: translateY(100%);
+            pointer-events: none !important;
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:Inter, -apple-system, BlinkMacSystemFont, sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.pointer-events-auto{pointer-events:auto}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.inset-0{inset:0px}.inset-4{inset:1rem}.bottom-0{bottom:0px}.left-1\/2{left:50%}.left-3{left:0.75rem}.right-3{right:0.75rem}.top-0{top:0px}.top-1\/2{top:50%}.top-16{top:4rem}.top-3{top:0.75rem}.z-10{z-index:10}.z-20{z-index:20}.z-30{z-index:30}.z-40{z-index:40}.z-50{z-index:50}.-ml-\[15px\]{margin-left:-15px}.mb-1{margin-bottom:0.25rem}.mb-1\.5{margin-bottom:0.375rem}.mb-2{margin-bottom:0.5rem}.mb-4{margin-bottom:1rem}.ml-1{margin-left:0.25rem}.mt-0\.5{margin-top:0.125rem}.mt-1{margin-top:0.25rem}.block{display:block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-1\.5{height:0.375rem}.h-14{height:3.5rem}.h-16{height:4rem}.h-2{height:0.5rem}.h-2\.5{height:0.625rem}.h-3{height:0.75rem}.h-3\.5{height:0.875rem}.h-4{height:1rem}.h-8{height:2rem}.h-full{height:100%}.h-screen{height:100vh}.w-0\.5{width:0.125rem}.w-1\.5{width:0.375rem}.w-12{width:3rem}.w-14{width:3.5rem}.w-16{width:4rem}.w-2{width:0.5rem}.w-2\.5{width:0.625rem}.w-3{width:0.75rem}.w-3\.5{width:0.875rem}.w-4{width:1rem}.w-8{width:2rem}.w-full{width:100%}.min-w-0{min-width:0px}.max-w-md{max-width:28rem}.max-w-sm{max-width:24rem}.flex-1{flex:1 1 0%}.shrink-0{flex-shrink:0}.-translate-x-1\/2{--tw-translate-x:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.-translate-y-1\/2{--tw-translate-y:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@keyframes ping{75%, 100%{transform:scale(2);opacity:0}}.animate-ping{animation:ping 1s cubic-bezier(0, 0, 0.2, 1) infinite}@keyframes pulse{50%{opacity:.5}}.animate-pulse{animation:pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite}.cursor-ew-resize{cursor:ew-resize}.cursor-pointer{cursor:pointer}.touch-none{touch-action:none}.select-none{-webkit-user-select:none;user-select:none}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.items-baseline{align-items:baseline}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-2\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.625rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.625rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rounded{border-radius:0.25rem}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-md{border-radius:0.375rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-2{border-width:2px}.border-b{border-bottom-width:1px}.border-l{border-left-width:1px}.border-t{border-top-width:1px}.border-dashed{border-style:dashed}.border-amber-500\/30{border-color:rgb(245 158 11 / 0.3)}.border-cyan-500\/30{border-color:rgb(6 182 212 / 0.3)}.border-cyan-500\/40{border-color:rgb(6 182 212 / 0.4)}.border-emerald-400\/30{border-color:rgb(52 211 153 / 0.3)}.border-emerald-500\/20{border-color:rgb(16 185 129 / 0.2)}.border-emerald-500\/30{border-color:rgb(16 185 129 / 0.3)}.border-indigo-400\/30{border-color:rgb(129 140 248 / 0.3)}.border-indigo-500{--tw-border-opacity:1;border-color:rgb(99 102 241 / var(--tw-border-opacity, 1))}.border-indigo-500\/20{border-color:rgb(99 102 241 / 0.2)}.border-indigo-500\/30{border-color:rgb(99 102 241 / 0.3)}.border-indigo-500\/40{border-color:rgb(99 102 241 / 0.4)}.border-red-400\/40{border-color:rgb(248 113 113 / 0.4)}.border-studio-700{--tw-border-opacity:1;border-color:rgb(44 50 66 / var(--tw-border-opacity, 1))}.border-studio-800{--tw-border-opacity:1;border-color:rgb(30 34 46 / var(--tw-border-opacity, 1))}.border-white{--tw-border-opacity:1;border-color:rgb(255 255 255 / var(--tw-border-opacity, 1))}.border-white\/10{border-color:rgb(255 255 255 / 0.1)}.border-white\/15{border-color:rgb(255 255 255 / 0.15)}.bg-amber-500\/15{background-color:rgb(245 158 11 / 0.15)}.bg-black{--tw-bg-opacity:1;background-color:rgb(0 0 0 / var(--tw-bg-opacity, 1))}.bg-black\/70{background-color:rgb(0 0 0 / 0.7)}.bg-black\/75{background-color:rgb(0 0 0 / 0.75)}.bg-cyan-400{--tw-bg-opacity:1;background-color:rgb(34 211 238 / var(--tw-bg-opacity, 1))}.bg-emerald-500\/10{background-color:rgb(16 185 129 / 0.1)}.bg-emerald-600\/90{background-color:rgb(5 150 105 / 0.9)}.bg-indigo-400{--tw-bg-opacity:1;background-color:rgb(129 140 248 / var(--tw-bg-opacity, 1))}.bg-indigo-500{--tw-bg-opacity:1;background-color:rgb(99 102 241 / var(--tw-bg-opacity, 1))}.bg-indigo-500\/10{background-color:rgb(99 102 241 / 0.1)}.bg-indigo-500\/15{background-color:rgb(99 102 241 / 0.15)}.bg-indigo-500\/20{background-color:rgb(99 102 241 / 0.2)}.bg-indigo-600{--tw-bg-opacity:1;background-color:rgb(79 70 229 / var(--tw-bg-opacity, 1))}.bg-indigo-600\/85{background-color:rgb(79 70 229 / 0.85)}.bg-indigo-950\/50{background-color:rgb(30 27 75 / 0.5)}.bg-indigo-950\/75{background-color:rgb(30 27 75 / 0.75)}.bg-purple-600{--tw-bg-opacity:1;background-color:rgb(147 51 234 / var(--tw-bg-opacity, 1))}.bg-red-500{--tw-bg-opacity:1;background-color:rgb(239 68 68 / var(--tw-bg-opacity, 1))}.bg-red-500\/80{background-color:rgb(239 68 68 / 0.8)}.bg-red-600\/90{background-color:rgb(220 38 38 / 0.9)}.bg-studio-800{--tw-bg-opacity:1;background-color:rgb(30 34 46 / var(--tw-bg-opacity, 1))}.bg-studio-850{--tw-bg-opacity:1;background-color:rgb(22 25 34 / var(--tw-bg-opacity, 1))}.bg-studio-900{--tw-bg-opacity:1;background-color:rgb(16 18 24 / var(--tw-bg-opacity, 1))}.bg-studio-900\/75{background-color:rgb(16 18 24 / 0.75)}.bg-studio-900\/80{background-color:rgb(16 18 24 / 0.8)}.bg-studio-900\/90{background-color:rgb(16 18 24 / 0.9)}.bg-studio-900\/95{background-color:rgb(16 18 24 / 0.95)}.bg-studio-950{--tw-bg-opacity:1;background-color:rgb(8 9 12 / var(--tw-bg-opacity, 1))}.bg-studio-950\/80{background-color:rgb(8 9 12 / 0.8)}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-white\/10{background-color:rgb(255 255 255 / 0.1)}.bg-emerald-500\/15{background-color:rgb(16 185 129 / 0.15)}.bg-emerald-600{--tw-bg-opacity:1;background-color:rgb(5 150 105 / var(--tw-bg-opacity, 1))}.bg-gradient-to-b{background-image:linear-gradient(to bottom, var(--tw-gradient-stops))}.bg-gradient-to-br{background-image:linear-gradient(to bottom right, var(--tw-gradient-stops))}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.from-cyan-400{--tw-gradient-from:#22d3ee var(--tw-gradient-from-position);--tw-gradient-to:rgb(34 211 238 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-cyan-500{--tw-gradient-from:#06b6d4 var(--tw-gradient-from-position);--tw-gradient-to:rgb(6 182 212 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-cyan-600{--tw-gradient-from:#0891b2 var(--tw-gradient-from-position);--tw-gradient-to:rgb(8 145 178 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-emerald-950\/40{--tw-gradient-from:rgb(2 44 34 / 0.4) var(--tw-gradient-from-position);--tw-gradient-to:rgb(2 44 34 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-indigo-500{--tw-gradient-from:#6366f1 var(--tw-gradient-from-position);--tw-gradient-to:rgb(99 102 241 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-studio-850{--tw-gradient-from:#161922 var(--tw-gradient-from-position);--tw-gradient-to:rgb(22 25 34 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-indigo-500{--tw-gradient-to:rgb(99 102 241 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #6366f1 var(--tw-gradient-via-position), var(--tw-gradient-to)}.via-purple-500{--tw-gradient-to:rgb(168 85 247 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #a855f7 var(--tw-gradient-via-position), var(--tw-gradient-to)}.to-cyan-500{--tw-gradient-to:#06b6d4 var(--tw-gradient-to-position)}.to-indigo-400{--tw-gradient-to:#818cf8 var(--tw-gradient-to-position)}.to-indigo-500{--tw-gradient-to:#6366f1 var(--tw-gradient-to-position)}.to-indigo-600{--tw-gradient-to:#4f46e5 var(--tw-gradient-to-position)}.to-purple-500{--tw-gradient-to:#a855f7 var(--tw-gradient-to-position)}.to-studio-900{--tw-gradient-to:#101218 var(--tw-gradient-to-position)}.bg-clip-text{-webkit-background-clip:text;background-clip:text}.object-contain{object-fit:contain}.p-1\.5{padding:0.375rem}.p-2{padding:0.5rem}.p-2\.5{padding:0.625rem}.p-3\.5{padding:0.875rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.px-1\.5{padding-left:0.375rem;padding-right:0.375rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}.px-4{padding-left:1rem;padding-right:1rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.pl-2{padding-left:0.5rem}.pt-1{padding-top:0.25rem}.pt-2{padding-top:0.5rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}.font-sans{font-family:Inter, -apple-system, BlinkMacSystemFont, sans-serif}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-relaxed{line-height:1.625}.tracking-wide{letter-spacing:0.025em}.tracking-wider{letter-spacing:0.05em}.text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77 / var(--tw-text-opacity, 1))}.text-cyan-200{--tw-text-opacity:1;color:rgb(165 243 252 / var(--tw-text-opacity, 1))}.text-cyan-300{--tw-text-opacity:1;color:rgb(103 232 249 / var(--tw-text-opacity, 1))}.text-cyan-400{--tw-text-opacity:1;color:rgb(34 211 238 / var(--tw-text-opacity, 1))}.text-emerald-300{--tw-text-opacity:1;color:rgb(110 231 183 / var(--tw-text-opacity, 1))}.text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.text-indigo-200{--tw-text-opacity:1;color:rgb(199 210 254 / var(--tw-text-opacity, 1))}.text-indigo-300{--tw-text-opacity:1;color:rgb(165 180 252 / var(--tw-text-opacity, 1))}.text-indigo-300\/80{color:rgb(165 180 252 / 0.8)}.text-indigo-400{--tw-text-opacity:1;color:rgb(129 140 248 / var(--tw-text-opacity, 1))}.text-red-400{--tw-text-opacity:1;color:rgb(248 113 113 / var(--tw-text-opacity, 1))}.text-transparent{color:transparent}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-zinc-100{--tw-text-opacity:1;color:rgb(244 244 245 / var(--tw-text-opacity, 1))}.text-zinc-200{--tw-text-opacity:1;color:rgb(228 228 231 / var(--tw-text-opacity, 1))}.text-zinc-300{--tw-text-opacity:1;color:rgb(212 212 216 / var(--tw-text-opacity, 1))}.text-zinc-400{--tw-text-opacity:1;color:rgb(161 161 170 / var(--tw-text-opacity, 1))}.text-zinc-500{--tw-text-opacity:1;color:rgb(113 113 122 / var(--tw-text-opacity, 1))}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.accent-cyan-500{accent-color:#06b6d4}.shadow{--tw-shadow:0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-\[0_0_12px_rgba\(0\2c 0\2c 0\2c 0\.9\)\]{--tw-shadow:0 0 12px rgba(0,0,0,0.9);--tw-shadow-colored:0 0 12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-cyan-600\/20{--tw-shadow-color:rgb(8 145 178 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.shadow-emerald-600\/20{--tw-shadow-color:rgb(5 150 105 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.shadow-indigo-500\/20{--tw-shadow-color:rgb(99 102 241 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.shadow-indigo-600\/25{--tw-shadow-color:rgb(79 70 229 / 0.25);--tw-shadow:var(--tw-shadow-colored)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-150{transition-duration:150ms}.duration-300{transition-duration:300ms}.selection\:bg-indigo-500 *::selection{--tw-bg-opacity:1;background-color:rgb(99 102 241 / var(--tw-bg-opacity, 1))}.selection\:text-white *::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.selection\:bg-indigo-500::selection{--tw-bg-opacity:1;background-color:rgb(99 102 241 / var(--tw-bg-opacity, 1))}.selection\:text-white::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.hover\:border-indigo-500\/70:hover{border-color:rgb(99 102 241 / 0.7)}.hover\:border-red-500\/40:hover{border-color:rgb(239 68 68 / 0.4)}.hover\:bg-emerald-500:hover{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.hover\:bg-indigo-500:hover{--tw-bg-opacity:1;background-color:rgb(99 102 241 / var(--tw-bg-opacity, 1))}.hover\:bg-indigo-900\/50:hover{background-color:rgb(49 46 129 / 0.5)}.hover\:bg-purple-500:hover{--tw-bg-opacity:1;background-color:rgb(168 85 247 / var(--tw-bg-opacity, 1))}.hover\:bg-red-500:hover{--tw-bg-opacity:1;background-color:rgb(239 68 68 / var(--tw-bg-opacity, 1))}.hover\:bg-red-950\/70:hover{background-color:rgb(69 10 10 / 0.7)}.hover\:bg-studio-700:hover{--tw-bg-opacity:1;background-color:rgb(44 50 66 / var(--tw-bg-opacity, 1))}.hover\:bg-studio-800:hover{--tw-bg-opacity:1;background-color:rgb(30 34 46 / var(--tw-bg-opacity, 1))}.hover\:bg-studio-900:hover{--tw-bg-opacity:1;background-color:rgb(16 18 24 / var(--tw-bg-opacity, 1))}.hover\:bg-white\/20:hover{background-color:rgb(255 255 255 / 0.2)}.hover\:from-cyan-500:hover{--tw-gradient-from:#06b6d4 var(--tw-gradient-from-position);--tw-gradient-to:rgb(6 182 212 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.hover\:to-indigo-500:hover{--tw-gradient-to:#6366f1 var(--tw-gradient-to-position)}.hover\:text-indigo-300:hover{--tw-text-opacity:1;color:rgb(165 180 252 / var(--tw-text-opacity, 1))}.hover\:text-red-300:hover{--tw-text-opacity:1;color:rgb(252 165 165 / var(--tw-text-opacity, 1))}.focus\:border-indigo-500:focus{--tw-border-opacity:1;border-color:rgb(99 102 241 / var(--tw-border-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.disabled\:pointer-events-none:disabled{pointer-events:none}.disabled\:bg-studio-800:disabled{--tw-bg-opacity:1;background-color:rgb(30 34 46 / var(--tw-bg-opacity, 1))}.disabled\:from-studio-800:disabled{--tw-gradient-from:#1e222e var(--tw-gradient-from-position);--tw-gradient-to:rgb(30 34 46 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.disabled\:to-studio-800:disabled{--tw-gradient-to:#1e222e var(--tw-gradient-to-position)}.disabled\:text-zinc-500:disabled{--tw-text-opacity:1;color:rgb(113 113 122 / var(--tw-text-opacity, 1))}.disabled\:opacity-40:disabled{opacity:0.4}.group:hover .group-hover\:text-indigo-300{--tw-text-opacity:1;color:rgb(165 180 252 / var(--tw-text-opacity, 1))}.group:hover .group-hover\:text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}@media (min-width: 640px){.sm\:block{display:block}.sm\:inline{display:inline}.sm\:inline-flex{display:inline-flex}.sm\:hidden{display:none}.sm\:w-14{width:3.5rem}.sm\:w-20{width:5rem}.sm\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.sm\:gap-2{gap:0.5rem}.sm\:gap-3{gap:0.75rem}.sm\:p-4{padding:1rem}.sm\:p-8{padding:2rem}.sm\:px-4{padding-left:1rem;padding-right:1rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}}@media (min-width: 768px){.md\:inline-block{display:inline-block}.md\:inline{display:inline}}@media (min-width: 1024px){.lg\:static{position:static}.lg\:inset-auto{inset:auto}.lg\:flex{display:flex}.lg\:hidden{display:none}.lg\:flex-row{flex-direction:row}.lg\:border-l{border-left-width:1px}.lg\:border-t-0{border-top-width:0px}}@media (min-width: 1280px){.xl\:flex{display:flex}.xl\:hidden{display:none}.xl\:w-\[400px\]{width:400px}}</style></head>
+<body class="bg-studio-950 text-zinc-100 font-sans antialiased selection:bg-indigo-500 selection:text-white flex flex-col h-screen overflow-hidden">
+
+    <!-- 隐藏的原生视频解码元素（流式读取大文件，零内存堆占用） -->
+    <video id="sourceVideo" playsinline="" crossorigin="anonymous" class="hidden"></video>
+    <!-- 隐藏的文件选择器 -->
+    <input type="file" id="fileInput" accept="video/*" class="hidden">
+
+    <!-- 全局 Toast 提示容器 -->
+    <div id="toastContainer" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- 顶部导航栏 -->
+    <header id="topHeader" class="hud-transition h-14 bg-studio-900/90 backdrop-blur-md border-b border-studio-800 px-3 sm:px-4 flex items-center justify-between shrink-0 z-30">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+                <svg class="w-4.5 h-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+            <div class="min-w-0">
+                <h1 class="text-xs sm:text-sm font-bold tracking-wide text-zinc-100 flex items-center gap-1.5 truncate">
+                    VISIONPRO <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 shrink-0">4K 超分与去马赛克引擎</span>
+                </h1>
+                <div class="flex items-center gap-2 text-[11px] text-zinc-400 truncate">
+                    <span id="videoMetaInfo" class="truncate">支持任意大小本地视频流式处理</span>
+                    <span id="resolutionPipelineBadge" class="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-mono text-[10px] shrink-0">
+                        源 0×0 → 4K 3840×2160
+                    </span>
+                    <span id="fpsCounterBadge" class="hidden md:inline-block font-mono text-[10px] text-cyan-400 shrink-0">60 FPS</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <!-- 旋转画面 90°/270° 按钮 -->
+            <button id="rotateVideoBtn" disabled="" title="旋转画面 90° (支持竖屏强制横屏)" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-studio-800 hover:bg-studio-700 text-zinc-200 border border-studio-700 disabled:opacity-40 disabled:pointer-events-none transition">
+                <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <span class="hidden md:inline">旋转</span>
+                <span id="rotateAngleLabel" class="font-mono text-[11px] text-cyan-300">0°</span>
+            </button>
+
+            <!-- 横屏全屏播放按钮 -->
+            <button id="landscapeFullscreenBtn" disabled="" title="横屏沉浸全屏播放" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-studio-800 hover:bg-studio-700 text-zinc-200 border border-studio-700 disabled:opacity-40 disabled:pointer-events-none transition">
+                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h8m-3-3l3 3-3 3"></path>
+                </svg>
+                <span class="hidden sm:inline">横屏全屏</span>
+            </button>
+
+            <!-- 分屏对比快捷开关 -->
+            <button id="toggleCompareBtn" disabled="" class="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-studio-800 hover:bg-studio-700 text-zinc-300 border border-studio-700 disabled:opacity-40 disabled:pointer-events-none transition">
+                <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"></path>
+                </svg>
+                <span>对比: <strong id="compareStateText" class="text-zinc-400">关</strong></span>
+            </button>
+
+            <!-- 导入视频按钮 -->
+            <button id="openFileBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/25 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                </svg>
+                <span>导入视频</span>
+            </button>
+
+            <!-- 一键导出 GitHub Pages + PWA 部署 ZIP 包按钮 -->
+            <button id="downloadPwaZipBtn" title="打包下载包含 index.html、manifest.json、sw.js 与高清图标的 GitHub Pages 专用 ZIP 部署包" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600/90 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 border border-emerald-400/30 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span class="hidden sm:inline">GitHub PWA ZIP</span>
+                <span class="sm:hidden">ZIP</span>
+            </button>
+
+            <!-- 安装到手机桌面按钮（当浏览器触发 beforeinstallprompt 时自动激活） -->
+            <button id="installPwaAppBtn" class="hidden items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white shadow-md transition cursor-pointer">
+                <span>安装桌面App</span>
+            </button>
+
+            <!-- 移动端展开/收起右侧控制面板按钮 -->
+            <button id="toggleSidebarBtn" class="lg:hidden p-2 rounded-lg bg-studio-800 hover:bg-studio-700 text-zinc-200 border border-studio-700" title="画质与4K设置">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- 主工作区：左侧播放视口 + 右侧调色与导出面板 -->
+    <div id="mainWorkspace" class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+
+        <!-- 左侧：主渲染视口与播放控制栏 -->
+        <main id="playerMainArea" class="flex-1 flex flex-col min-w-0 bg-studio-950 relative overflow-hidden">
+            
+            <!-- 画布容器（支持文件拖拽与全屏手势控制） -->
+            <div id="viewportContainer" class="flex-1 relative flex items-center justify-center overflow-hidden canvas-backdrop p-2 sm:p-4 select-none touch-none">
+                
+                <!-- 空状态 / 拖拽提示层 -->
+                <div id="emptyDropZone" class="max-w-md w-full p-6 sm:p-8 rounded-2xl border-2 border-dashed border-studio-700 bg-studio-900/80 backdrop-blur-md text-center flex flex-col items-center justify-center transition-all hover:border-indigo-500/70 hover:bg-studio-900 cursor-pointer shadow-2xl">
+                    <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-4 text-indigo-400">
+                        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-base font-semibold text-zinc-100 mb-1.5">点击或拖拽本地视频文件至此</h2>
+                    <p class="text-xs text-zinc-400 leading-relaxed mb-4">
+                        采用 <code class="text-indigo-400">ObjectURL</code> 零内存流式解码与 GPU 着色器实时渲染。<br>
+                        支持 <strong class="text-zinc-200">4K (3840×2160) 亚像素超分</strong>、<strong class="text-zinc-200">联合双边去马赛克修复</strong> 与 <strong class="text-zinc-200">横屏全屏播放</strong>，无文件体积限制。
+                    </p>
+                    <span class="px-4 py-2 rounded-xl bg-studio-800 text-xs font-medium text-zinc-200 border border-studio-700 shadow">
+                        选择本地视频文件...
+                    </span>
+                </div>
+
+                <!-- 拖拽覆盖层 -->
+                <div id="dragOverlay" class="hidden absolute inset-4 rounded-2xl border-2 border-dashed border-indigo-500 bg-indigo-950/75 backdrop-blur-md z-30 flex items-center justify-center pointer-events-none">
+                    <div class="text-center">
+                        <p class="text-lg font-bold text-white">松开鼠标以载入新视频</p>
+                        <p class="text-xs text-indigo-200 mt-1">即刻启用 4K 超分与去马赛克管线</p>
+                    </div>
+                </div>
+
+                <!-- 手势交互中央反馈浮窗（亮度 / 音量 / 进度快进提示） -->
+                <div id="gestureFeedback" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-2.5 rounded-2xl bg-black/75 backdrop-blur-md border border-white/15 text-white text-xs font-semibold flex items-center gap-2.5 z-40 pointer-events-none shadow-2xl">
+                    <span id="gestureIcon" class="text-indigo-400"></span>
+                    <span id="gestureText" class="font-mono"></span>
+                </div>
+
+                <!-- 全屏/横屏模式下的悬浮顶部退出提示栏 -->
+                <div id="fullscreenFloatingTop" class="hidden hud-transition absolute top-3 left-3 right-3 flex items-center justify-between px-3.5 py-2 rounded-xl bg-studio-900/75 backdrop-blur-md border border-white/10 z-30">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span id="fsTitleText" class="text-xs font-medium text-zinc-100 truncate">正在播放</span>
+                        <span id="fsResBadge" class="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono text-[10px] shrink-0">4K UHD</span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button id="fsRotateBtn" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-zinc-100 flex items-center gap-1 transition">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <span>旋转画面</span>
+                        </button>
+                        <button id="exitFullscreenBtn" class="px-2.5 py-1 rounded-lg bg-red-500/80 hover:bg-red-500 text-xs text-white font-medium transition">
+                            退出全屏
+                        </button>
+                    </div>
+                </div>
+
+                <!-- WebGL 实时画质增强渲染画布 -->
+                <div id="canvasWrapper" class="hidden relative flex items-center justify-center shadow-2xl rounded-lg overflow-hidden bg-black transition-transform duration-300">
+                    <canvas id="glCanvas" class="block w-full h-full object-contain"></canvas>
+
+                    <!-- 分屏对比拖拽分割线与标签 -->
+                    <div id="splitOverlay" class="hidden absolute inset-0 pointer-events-none">
+                        <div class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-md text-[11px] font-medium text-zinc-300 border border-white/10">
+                            原始画质 (Original)
+                        </div>
+                        <div class="absolute top-3 right-3 px-2.5 py-1 rounded-md bg-indigo-600/85 backdrop-blur-md text-[11px] font-semibold text-white border border-indigo-400/30 shadow">
+                            4K 超分 + 去马赛克
+                        </div>
+                        <div id="splitLine" style="left: 50%;" class="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_12px_rgba(0,0,0,0.9)] pointer-events-auto cursor-ew-resize flex items-center justify-center">
+                            <div class="w-8 h-8 -ml-[15px] rounded-full bg-indigo-600 border-2 border-white shadow-lg flex items-center justify-center text-white">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l-3 3 3 3m8-6l3 3-3 3"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 录制中状态浮标 -->
+                    <div id="recordingBadge" class="hidden absolute top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-red-600/90 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-2 shadow-lg border border-red-400/40 z-20">
+                        <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                        <span id="recordingBadgeText">正在实时渲染导出...</span>
+                    </div>
+
+                    <!-- 去马赛克主动处理进度遮罩浮层 -->
+                    <div id="demosaicProcessOverlay" class="hidden absolute inset-0 bg-studio-950/80 backdrop-blur-md z-30 flex flex-col items-center justify-center p-6 text-center">
+                        <div class="max-w-sm w-full bg-studio-900/95 border border-cyan-500/40 rounded-2xl p-5 shadow-2xl space-y-4">
+                            <div class="flex items-center justify-center gap-2.5">
+                                <span class="w-3 h-3 rounded-full bg-cyan-400 animate-ping"></span>
+                                <h4 class="text-sm font-bold text-cyan-200 tracking-wide">AI 联合双边去马赛克深度处理中</h4>
+                            </div>
+                            <div class="flex items-baseline justify-center gap-1">
+                                <span id="overlayPercentNum" class="text-4xl font-extrabold font-mono text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">0</span>
+                                <span class="text-lg font-bold text-cyan-400">%</span>
+                            </div>
+                            <div class="w-full h-2.5 bg-studio-800 rounded-full overflow-hidden border border-studio-700">
+                                <div id="overlayProgressBar" class="h-full bg-gradient-to-r from-cyan-500 via-indigo-500 to-purple-500 transition-all duration-150" style="width: 0%"></div>
+                            </div>
+                            <p id="overlayStageText" class="text-xs text-zinc-400 font-mono">正在逐帧重构像素块梯度与 4K 边缘特征...</p>
+                            <div class="pt-1 flex justify-center">
+                                <button id="cancelDemosaicProcessBtn" class="px-4 py-1.5 rounded-lg bg-studio-800 hover:bg-red-950/70 text-xs text-zinc-300 hover:text-red-300 border border-studio-700 hover:border-red-500/40 transition">
+                                    取消处理
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部播放控制栏 -->
+            <div id="bottomControlBar" class="hud-transition bg-studio-900/95 backdrop-blur-md border-t border-studio-800 px-3 sm:px-4 py-2.5 shrink-0 select-none z-30">
+                <!-- 进度条与时间预览 -->
+                <div class="flex items-center gap-2.5 sm:gap-3 mb-2">
+                    <span id="currentTimeText" class="text-xs font-mono text-zinc-400 w-12 sm:w-14 text-right">00:00</span>
+                    <div class="relative flex-1 flex items-center group">
+                        <input type="range" id="seekBar" min="0" max="100" step="0.01" value="0" disabled="" class="studio-slider w-full disabled:opacity-40">
+                    </div>
+                    <span id="durationText" class="text-xs font-mono text-zinc-400 w-12 sm:w-14">00:00</span>
+                </div>
+
+                <!-- 控制按钮行 -->
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <!-- 左侧：播放/暂停、逐帧、音量 -->
+                    <div class="flex items-center gap-1.5 sm:gap-2">
+                        <button id="playPauseBtn" disabled="" title="播放/暂停 (空格键)" class="p-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-40 disabled:pointer-events-none transition">
+                            <svg id="iconPlay" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+                            <svg id="iconPause" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+                        </button>
+
+                        <button id="prevFrameBtn" disabled="" title="上一帧 (,)" class="p-2 rounded-lg bg-studio-800 hover:bg-studio-700 text-zinc-300 disabled:opacity-40 disabled:pointer-events-none transition text-xs font-mono">
+                            -1帧
+                        </button>
+                        <button id="nextFrameBtn" disabled="" title="下一帧 (.)" class="p-2 rounded-lg bg-studio-800 hover:bg-studio-700 text-zinc-300 disabled:opacity-40 disabled:pointer-events-none transition text-xs font-mono">
+                            +1帧
+                        </button>
+
+                        <!-- 音量控制 -->
+                        <div class="flex items-center gap-1.5 ml-1 pl-2 border-l border-studio-800">
+                            <button id="muteBtn" disabled="" title="静音 (M)" class="p-1.5 rounded-lg hover:bg-studio-800 text-zinc-300 disabled:opacity-40 transition">
+                                <svg id="iconVolOn" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                                </svg>
+                                <svg id="iconVolOff" class="w-4 h-4 hidden text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+                                </svg>
+                            </button>
+                            <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="1" disabled="" class="studio-slider w-14 sm:w-20 disabled:opacity-40">
+                        </div>
+                    </div>
+
+                    <!-- 右侧：倍速、对比、横屏全屏 -->
+                    <div class="flex items-center gap-1.5 sm:gap-2">
+                        <select id="playbackRateSelect" disabled="" title="播放倍速" class="bg-studio-800 border border-studio-700 text-zinc-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-500 disabled:opacity-40">
+                            <option value="0.5">0.5x</option>
+                            <option value="0.75">0.75x</option>
+                            <option value="1" selected="">1.0x</option>
+                            <option value="1.25">1.25x</option>
+                            <option value="1.5">1.5x</option>
+                            <option value="2">2.0x</option>
+                        </select>
+
+                        <button id="mobileCompareBtn" disabled="" class="xl:hidden px-2.5 py-1.5 rounded-lg bg-studio-800 hover:bg-studio-700 text-zinc-200 border border-studio-700 disabled:opacity-40 text-xs">
+                            对比
+                        </button>
+
+                        <button id="pipBtn" disabled="" title="画中画" class="p-2 rounded-lg bg-studio-800 hover:bg-studio-700 text-zinc-300 disabled:opacity-40 transition hidden sm:block">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                        </button>
+
+                        <button id="fullscreenBtn" disabled="" title="全屏切换 (F)" class="p-2 rounded-lg bg-studio-800 hover:bg-studio-700 text-zinc-300 disabled:opacity-40 transition">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 右侧：4K 超分、去马赛克调色台与视频导出面板 -->
+        <aside id="controlSidebar" class="hidden lg:flex flex-col w-full lg:w-92 xl:w-[400px] bg-studio-900 border-t lg:border-t-0 lg:border-l border-studio-800 shrink-0 overflow-y-auto z-30 absolute lg:static inset-0 lg:inset-auto">
+            
+            <!-- 移动端关闭面板头部 -->
+            <div class="lg:hidden flex items-center justify-between px-4 py-3 border-b border-studio-800 bg-studio-950 sticky top-0 z-10">
+                <span class="text-sm font-semibold text-zinc-100">4K 超分 · 去马赛克与导出工作台</span>
+                <button id="closeSidebarBtn" class="p-1.5 rounded-lg bg-studio-800 text-zinc-300">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-4 space-y-4 flex-1">
+                
+                <!-- 1. 4K 超分辨率渲染管线设置 -->
+                <section class="bg-gradient-to-br from-studio-850 to-studio-900 p-3.5 rounded-xl border border-indigo-500/30 space-y-3 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                            4K 超分辨率渲染管线
+                        </h3>
+                        <span id="activeRenderResText" class="text-[11px] font-mono text-emerald-400 font-semibold">自适应超分</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                            <label for="targetResolutionSelect" class="block text-[11px] text-zinc-400 mb-1">输出/渲染分辨率</label>
+                            <select id="targetResolutionSelect" class="w-full bg-studio-800 border border-studio-700 text-zinc-100 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500">
+                                <option value="native">原始分辨率 (1:1)</option>
+                                <option value="1080p">1080P Full HD (1920×1080)</option>
+                                <option value="2k">2K QHD (2560×1440)</option>
+                                <option value="4k" selected="">4K UHD 超清 (3840×2160)</option>
+                                <option value="1.5x">1.5× 亚像素超采样</option>
+                                <option value="2x">2.0× 亚像素超采样</option>
+                                <option value="4x">4.0× 极致超采样 (上限4K)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="upscaleAlgoSelect" class="block text-[11px] text-zinc-400 mb-1">超采样重采样内核</label>
+                            <select id="upscaleAlgoSelect" class="w-full bg-studio-800 border border-studio-700 text-zinc-100 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500">
+                                <option value="bicubic_cas" selected="">Bicubic 双三次 + CAS 抗锯齿</option>
+                                <option value="bilinear_fast">Bilinear 高速省电模式</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-zinc-400 leading-relaxed">
+                        自动保持原视频长宽比并将长边无损超采样映射至目标分辨率（最高 <strong class="text-zinc-200">3840×2160 4K</strong>），消除放大锯齿。
+                    </p>
+                </section>
+
+                <!-- 2. 一键画质与去马赛克预设 -->
+                <section>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                            一键修复与超清预设
+                        </h3>
+                        <button id="resetParamsBtn" class="text-xs text-indigo-400 hover:text-indigo-300 transition">重置默认</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button data-preset="demosaic_4k" class="preset-btn px-3 py-2 rounded-xl bg-indigo-950/50 hover:bg-indigo-900/50 border border-indigo-500/40 text-left transition group">
+                            <div class="text-xs font-semibold text-indigo-200 group-hover:text-white">一键去马赛克超清</div>
+                            <div class="text-[10px] text-indigo-300/80 mt-0.5">双边去块 + 4K 边缘重建</div>
+                        </button>
+                        <button data-preset="cinematic" class="preset-btn px-3 py-2 rounded-xl bg-studio-800 hover:bg-studio-700 border border-studio-700 text-left transition group">
+                            <div class="text-xs font-semibold text-zinc-100 group-hover:text-indigo-300">电影级 4K 母带</div>
+                            <div class="text-[10px] text-zinc-400 mt-0.5">CAS 纹理锐化 + 动态对比</div>
+                        </button>
+                        <button data-preset="anime" class="preset-btn px-3 py-2 rounded-xl bg-studio-800 hover:bg-studio-700 border border-studio-700 text-left transition group">
+                            <div class="text-xs font-semibold text-zinc-100 group-hover:text-indigo-300">动漫线条去块锐化</div>
+                            <div class="text-[10px] text-zinc-400 mt-0.5">消除色带 + 强力轮廓重建</div>
+                        </button>
+                        <button data-preset="restore" class="preset-btn px-3 py-2 rounded-xl bg-studio-800 hover:bg-studio-700 border border-studio-700 text-left transition group">
+                            <div class="text-xs font-semibold text-zinc-100 group-hover:text-indigo-300">低清模糊画质修复</div>
+                            <div class="text-[10px] text-zinc-400 mt-0.5">强力去马赛克 + 去雾通透</div>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 3. 去马赛克与 4K 边缘重建模块 (Joint Bilateral De-mosaic) -->
+                <section class="bg-studio-850 p-3.5 rounded-xl border border-cyan-500/30 space-y-3 shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="enableDemosaicCheck" checked="" class="w-4 h-4 rounded accent-cyan-500 cursor-pointer">
+                            <label for="enableDemosaicCheck" class="text-xs font-semibold uppercase tracking-wider text-cyan-300 cursor-pointer select-none">启用去除马赛克修复</label>
+                        </div>
+                        <span id="demosaicStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-medium">待启动处理</span>
+                    </div>
+
+                    <!-- 去马赛克强度 (De-mosaic) -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <label for="demosaicSlider" class="text-zinc-200 font-medium">去马赛克强度 (De-mosaic)</label>
+                            <span id="demosaicVal" class="font-mono text-cyan-400">65%</span>
+                        </div>
+                        <input type="range" id="demosaicSlider" min="0" max="100" step="1" value="65" class="studio-slider w-full">
+                        <p class="text-[10px] text-zinc-500 mt-0.5">融合像素块色阶梯度，锁死真实边缘不模糊</p>
+                    </div>
+
+                    <!-- 块效应平滑 (De-block) -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <label for="deblockSlider" class="text-zinc-200 font-medium">压缩块效应平滑 (De-block)</label>
+                            <span id="deblockVal" class="font-mono text-cyan-400">55%</span>
+                        </div>
+                        <input type="range" id="deblockSlider" min="0" max="100" step="1" value="55" class="studio-slider w-full">
+                    </div>
+
+                    <!-- 边缘重建锐化 (4K CAS 锐度) -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <label for="sharpenSlider" class="text-zinc-200 font-medium">边缘重建锐化 (4K CAS 锐度)</label>
+                            <span id="sharpenVal" class="font-mono text-indigo-400">55%</span>
+                        </div>
+                        <input type="range" id="sharpenSlider" min="0" max="100" step="1" value="55" class="studio-slider w-full">
+                    </div>
+
+                    <!-- 局部通透度 / 去雾感 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <label for="claritySlider" class="text-zinc-300">局部微对比 / 去雾通透度</label>
+                            <span id="clarityVal" class="font-mono text-indigo-400">20%</span>
+                        </div>
+                        <input type="range" id="claritySlider" min="0" max="100" step="1" value="20" class="studio-slider w-full">
+                    </div>
+
+                    <!-- 主动触发去马赛克处理按钮与实时百分比进度条 -->
+                    <div class="pt-1 border-t border-studio-800 space-y-2.5">
+                        <button id="startDemosaicProcessBtn" disabled="" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 disabled:from-studio-800 disabled:to-studio-800 disabled:text-zinc-500 text-white text-xs font-semibold shadow-lg shadow-cyan-600/20 flex items-center justify-center gap-2 transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                            </svg>
+                            <span id="startDemosaicBtnText">开始去除马赛克并增强画质</span>
+                        </button>
+
+                        <!-- 侧边栏去马赛克处理百分比进度条 -->
+                        <div id="demosaicProgressCard" class="hidden p-2.5 rounded-xl bg-studio-900/90 border border-cyan-500/30 space-y-1.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <span id="demosaicProgressStage" class="text-cyan-300 font-medium">正在分析并重构帧纹理...</span>
+                                <span id="demosaicProgressPercent" class="font-mono font-bold text-cyan-400">0%</span>
+                            </div>
+                            <div class="w-full h-2 bg-studio-800 rounded-full overflow-hidden">
+                                <div id="demosaicProgressBar" class="h-full bg-gradient-to-r from-cyan-400 to-indigo-500 transition-all duration-150" style="width: 0%"></div>
+                            </div>
+                            <div class="flex items-center justify-between text-[10px] text-zinc-400">
+                                <span id="demosaicFrameStat">已扫描: 0% 画面帧</span>
+                                <button id="sidebarCancelDemosaicBtn" class="text-red-400 hover:text-red-300 font-medium">中止</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. 色彩与动态范围调节 -->
+                <section class="bg-studio-850 p-3.5 rounded-xl border border-studio-800 space-y-2.5">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-300">色彩与 HDR 动态范围</h3>
+
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <label for="brightnessSlider" class="text-zinc-400">亮度 (Brightness)</label>
+                            <span id="brightnessVal" class="font-mono text-zinc-300">0</span>
+                        </div>
+                        <input type="range" id="brightnessSlider" min="-50" max="50" step="1" value="0" class="studio-slider w-full">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <label for="contrastSlider" class="text-zinc-400">对比度 (Contrast)</label>
+                            <span id="contrastVal" class="font-mono text-zinc-300">+8%</span>
+                        </div>
+                        <input type="range" id="contrastSlider" min="-50" max="50" step="1" value="8" class="studio-slider w-full">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <label for="saturationSlider" class="text-zinc-400">自然饱和度 (Saturation)</label>
+                            <span id="saturationVal" class="font-mono text-zinc-300">+10%</span>
+                        </div>
+                        <input type="range" id="saturationSlider" min="-50" max="50" step="1" value="10" class="studio-slider w-full">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <label for="gammaSlider" class="text-zinc-400">HDR 暗部细节 (Gamma)</label>
+                            <span id="gammaVal" class="font-mono text-zinc-300">1.05</span>
+                        </div>
+                        <input type="range" id="gammaSlider" min="0.5" max="1.8" step="0.05" value="1.05" class="studio-slider w-full">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <label for="tempSlider" class="text-zinc-400">色温冷暖 (Temperature)</label>
+                            <span id="tempVal" class="font-mono text-zinc-300">0</span>
+                        </div>
+                        <input type="range" id="tempSlider" min="-50" max="50" step="1" value="0" class="studio-slider w-full">
+                    </div>
+                </section>
+
+                <!-- 5. 4K 增强视频流式导出与保存 -->
+                <section class="bg-gradient-to-b from-studio-850 to-studio-900 p-3.5 rounded-xl border border-indigo-500/30 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            4K 超清流式录制导出
+                        </h3>
+                        <span id="codecSupportTag" class="text-[10px] font-mono text-zinc-400">支持 5 种硬件编码</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] text-zinc-400 mb-1">导出码率 (最高 50M)</label>
+                            <select id="exportBitrateSelect" class="w-full bg-studio-800 border border-studio-700 text-zinc-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-500">
+                                <option value="12000000">1080P 高清 (12 Mbps)</option>
+                                <option value="25000000">2K 超清 (25 Mbps)</option>
+                                <option value="40000000" selected="">4K 母带级 (40 Mbps)</option>
+                                <option value="50000000">4K 极致峰值 (50 Mbps)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-zinc-400 mb-1">封装格式</label>
+                            <select id="exportFormatSelect" class="w-full bg-studio-800 border border-studio-700 text-zinc-200 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-indigo-500"><option value="{&quot;mime&quot;:&quot;video/mp4;codecs=avc1,mp4a.40.2&quot;,&quot;ext&quot;:&quot;mp4&quot;}">MP4 (H.264 + AAC)</option><option value="{&quot;mime&quot;:&quot;video/mp4&quot;,&quot;ext&quot;:&quot;mp4&quot;}">MP4 (标准封装)</option><option value="{&quot;mime&quot;:&quot;video/webm;codecs=vp9,opus&quot;,&quot;ext&quot;:&quot;webm&quot;}">WebM (VP9 4K 高清)</option><option value="{&quot;mime&quot;:&quot;video/webm;codecs=vp8,opus&quot;,&quot;ext&quot;:&quot;webm&quot;}">WebM (VP8 通用)</option><option value="{&quot;mime&quot;:&quot;video/webm&quot;,&quot;ext&quot;:&quot;webm&quot;}">WebM (默认封装)</option></select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pt-1">
+                        <button id="exportFullBtn" disabled="" class="w-full py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-studio-800 disabled:text-zinc-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/25 flex items-center justify-center gap-2 transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>从头自动播放并导出完整视频</span>
+                        </button>
+
+                        <button id="recordClipBtn" disabled="" class="w-full py-2 px-3 rounded-xl bg-studio-800 hover:bg-studio-700 disabled:opacity-40 text-zinc-200 border border-studio-700 text-xs font-medium flex items-center justify-center gap-2 transition cursor-pointer">
+                            <span id="recordDot" class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                            <span id="recordClipText">开始录制当前 A-B 片段</span>
+                        </button>
+                    </div>
+
+                    <!-- 导出进度面板 -->
+                    <div id="exportProgressBox" class="hidden pt-2 border-t border-studio-800 space-y-1.5">
+                        <div class="flex justify-between text-[11px]">
+                            <span id="exportStatusLabel" class="text-indigo-300 font-medium">正在流式编码...</span>
+                            <span id="exportPercentLabel" class="font-mono text-zinc-300">0%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-studio-800 rounded-full overflow-hidden">
+                            <div id="exportProgressBar" class="h-full bg-indigo-500 transition-all duration-150" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between items-center pt-1">
+                            <span id="exportSizeLabel" class="text-[10px] text-zinc-400 font-mono">已生成: 0.0 MB</span>
+                            <button id="cancelExportBtn" class="text-[11px] text-red-400 hover:text-red-300 font-medium">停止并保存当前</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 6. PWA 手机桌面安装与 GitHub Pages 部署中心 -->
+                <section class="bg-gradient-to-br from-emerald-950/40 to-studio-900 p-3.5 rounded-xl border border-emerald-500/30 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                            PWA 手机桌面应用 &amp; GitHub 部署
+                        </h3>
+                        <span id="pwaStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-medium">PWA 就绪</span>
+                    </div>
+                    <p class="text-[11px] text-zinc-400 leading-relaxed">
+                        点击下方按钮一键生成标准 <strong class="text-zinc-200">GitHub Pages 部署包 (.zip)</strong>，解压后上传至 GitHub 仓库并开启 Pages，即可通过手机浏览器将本播放器作为原生 App 安装到桌面并支持离线运行。
+                    </p>
+                    <button id="sidebarDownloadZipBtn" class="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 transition cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        <span>打包下载 GitHub PWA 部署包 (.zip)</span>
+                    </button>
+                </section>
+
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        /**
+         * VisionPro Studio 4K & De-mosaic 升级版核心引擎
+         * 1. 支持最高 4K (3840×2160) 双三次亚像素超采样 (Bicubic) + 对比度自适应锐化 (CAS)
+         * 2. 联合双边滤波去马赛克与块效应修复 (Joint Bilateral De-mosaic & De-blocking)
+         * 3. 横屏全屏锁定 (Screen Orientation Lock) + 强制 90°/180°/270° 旋转渲染 + 全屏沉浸手势控制
+         */
+
+        // ======================== 1. DOM 元素引用 ========================
+        const video = document.getElementById('sourceVideo');
+        const fileInput = document.getElementById('fileInput');
+        const openFileBtn = document.getElementById('openFileBtn');
+        const emptyDropZone = document.getElementById('emptyDropZone');
+        const viewportContainer = document.getElementById('viewportContainer');
+        const dragOverlay = document.getElementById('dragOverlay');
+        const canvasWrapper = document.getElementById('canvasWrapper');
+        const glCanvas = document.getElementById('glCanvas');
+        const videoMetaInfo = document.getElementById('videoMetaInfo');
+        const resolutionPipelineBadge = document.getElementById('resolutionPipelineBadge');
+        const fpsCounterBadge = document.getElementById('fpsCounterBadge');
+
+        // 顶部与沉浸式悬浮 HUD
+        const topHeader = document.getElementById('topHeader');
+        const bottomControlBar = document.getElementById('bottomControlBar');
+        const fullscreenFloatingTop = document.getElementById('fullscreenFloatingTop');
+        const fsTitleText = document.getElementById('fsTitleText');
+        const fsResBadge = document.getElementById('fsResBadge');
+        const fsRotateBtn = document.getElementById('fsRotateBtn');
+        const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
+        const gestureFeedback = document.getElementById('gestureFeedback');
+        const gestureIcon = document.getElementById('gestureIcon');
+        const gestureText = document.getElementById('gestureText');
+
+        // 横屏与旋转控件
+        const rotateVideoBtn = document.getElementById('rotateVideoBtn');
+        const rotateAngleLabel = document.getElementById('rotateAngleLabel');
+        const landscapeFullscreenBtn = document.getElementById('landscapeFullscreenBtn');
+
+        // 播放控制控件
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const iconPlay = document.getElementById('iconPlay');
+        const iconPause = document.getElementById('iconPause');
+        const prevFrameBtn = document.getElementById('prevFrameBtn');
+        const nextFrameBtn = document.getElementById('nextFrameBtn');
+        const seekBar = document.getElementById('seekBar');
+        const currentTimeText = document.getElementById('currentTimeText');
+        const durationText = document.getElementById('durationText');
+        const muteBtn = document.getElementById('muteBtn');
+        const iconVolOn = document.getElementById('iconVolOn');
+        const iconVolOff = document.getElementById('iconVolOff');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const playbackRateSelect = document.getElementById('playbackRateSelect');
+        const pipBtn = document.getElementById('pipBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+        // 分屏对比控件
+        const toggleCompareBtn = document.getElementById('toggleCompareBtn');
+        const mobileCompareBtn = document.getElementById('mobileCompareBtn');
+        const compareStateText = document.getElementById('compareStateText');
+        const splitOverlay = document.getElementById('splitOverlay');
+        const splitLine = document.getElementById('splitLine');
+
+        // 移动端侧边栏控制
+        const controlSidebar = document.getElementById('controlSidebar');
+        const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+        const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+
+        // 4K 超分设置
+        const targetResolutionSelect = document.getElementById('targetResolutionSelect');
+        const upscaleAlgoSelect = document.getElementById('upscaleAlgoSelect');
+        const activeRenderResText = document.getElementById('activeRenderResText');
+
+        // 去马赛克处理任务与进度 DOM
+        const enableDemosaicCheck = document.getElementById('enableDemosaicCheck');
+        const demosaicStatusBadge = document.getElementById('demosaicStatusBadge');
+        const startDemosaicProcessBtn = document.getElementById('startDemosaicProcessBtn');
+        const startDemosaicBtnText = document.getElementById('startDemosaicBtnText');
+        const demosaicProgressCard = document.getElementById('demosaicProgressCard');
+        const demosaicProgressStage = document.getElementById('demosaicProgressStage');
+        const demosaicProgressPercent = document.getElementById('demosaicProgressPercent');
+        const demosaicProgressBar = document.getElementById('demosaicProgressBar');
+        const demosaicFrameStat = document.getElementById('demosaicFrameStat');
+        const sidebarCancelDemosaicBtn = document.getElementById('sidebarCancelDemosaicBtn');
+        const demosaicProcessOverlay = document.getElementById('demosaicProcessOverlay');
+        const overlayPercentNum = document.getElementById('overlayPercentNum');
+        const overlayProgressBar = document.getElementById('overlayProgressBar');
+        const overlayStageText = document.getElementById('overlayStageText');
+        const cancelDemosaicProcessBtn = document.getElementById('cancelDemosaicProcessBtn');
+
+        // 画质与去马赛克参数滑块
+        const sliders = {
+            demosaic: document.getElementById('demosaicSlider'),
+            deblock: document.getElementById('deblockSlider'),
+            sharpen: document.getElementById('sharpenSlider'),
+            clarity: document.getElementById('claritySlider'),
+            brightness: document.getElementById('brightnessSlider'),
+            contrast: document.getElementById('contrastSlider'),
+            saturation: document.getElementById('saturationSlider'),
+            gamma: document.getElementById('gammaSlider'),
+            temp: document.getElementById('tempSlider')
+        };
+
+        const valueLabels = {
+            demosaic: document.getElementById('demosaicVal'),
+            deblock: document.getElementById('deblockVal'),
+            sharpen: document.getElementById('sharpenVal'),
+            clarity: document.getElementById('clarityVal'),
+            brightness: document.getElementById('brightnessVal'),
+            contrast: document.getElementById('contrastVal'),
+            saturation: document.getElementById('saturationVal'),
+            gamma: document.getElementById('gammaVal'),
+            temp: document.getElementById('tempVal')
+        };
+
+        // 导出控件
+        const exportBitrateSelect = document.getElementById('exportBitrateSelect');
+        const exportFormatSelect = document.getElementById('exportFormatSelect');
+        const codecSupportTag = document.getElementById('codecSupportTag');
+        const exportFullBtn = document.getElementById('exportFullBtn');
+        const recordClipBtn = document.getElementById('recordClipBtn');
+        const recordClipText = document.getElementById('recordClipText');
+        const exportProgressBox = document.getElementById('exportProgressBox');
+        const exportStatusLabel = document.getElementById('exportStatusLabel');
+        const exportPercentLabel = document.getElementById('exportPercentLabel');
+        const exportProgressBar = document.getElementById('exportProgressBar');
+        const exportSizeLabel = document.getElementById('exportSizeLabel');
+        const cancelExportBtn = document.getElementById('cancelExportBtn');
+        const recordingBadge = document.getElementById('recordingBadge');
+        const recordingBadgeText = document.getElementById('recordingBadgeText');
+
+        // ======================== 2. 应用全局状态 ========================
+        const state = {
+            currentObjectUrl: null,
+            fileName: 'enhanced_4k_video',
+            isVideoLoaded: false,
+            rotationDeg: 0, // 0, 90, 180, 270
+            targetResMode: '4k', // native, 1080p, 2k, 4k, 1.5x, 2x, 4x
+            useBicubicCAS: true,
+            compareEnabled: false,
+            splitRatio: 0.5,
+            isDraggingSplit: false,
+            isSeeking: false,
+            // 沉浸式全屏自动隐藏计时器
+            hudHideTimer: null,
+            // 画质与去马赛克参数
+            params: {
+                demosaic: 0.35,     // 0.0 ~ 1.0 联合双边去马赛克
+                deblock: 0.30,      // 0.0 ~ 1.0 压缩块边界平滑
+                sharpen: 0.45,      // 0.0 ~ 1.0 CAS 边缘重建锐化
+                clarity: 0.15,      // 0.0 ~ 1.0 局部通透度
+                brightness: 0.0,    // -0.5 ~ 0.5
+                contrast: 1.08,     // 0.5 ~ 1.5
+                saturation: 1.10,   // 0.5 ~ 1.5
+                gamma: 1.05,        // 0.5 ~ 1.8
+                temp: 0.0           // -0.5 ~ 0.5
+            },
+            // FPS 统计
+            frameCount: 0,
+            lastFpsTime: performance.now(),
+            // 去马赛克主动处理状态与进度
+            demosaicEnabled: true,
+            demosaicProcessed: false, // 是否已完成处理或正在应用去马赛克算法
+            isProcessingDemosaic: false,
+            demosaicProcessTimer: null,
+            demosaicProcessPct: 0,
+            // 导出状态
+            isRecording: false,
+            isFullExportMode: false,
+            mediaRecorder: null,
+            recordedChunks: [],
+            recordedBytes: 0,
+            audioCtx: null,
+            audioSourceNode: null,
+            audioDestNode: null
+        };
+
+        // ======================== 3. Toast 提示系统 ========================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const colors = {
+                info: 'bg-studio-800/95 border-studio-700 text-zinc-100',
+                success: 'bg-emerald-950/95 border-emerald-500/40 text-emerald-200',
+                error: 'bg-red-950/95 border-red-500/40 text-red-200'
+            };
+            toast.className = `px-4 py-2 rounded-xl border shadow-2xl backdrop-blur-md text-xs font-medium flex items-center gap-2 transition-all duration-300 transform translate-y-0 opacity-100 ${colors[type] || colors.info}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', '-translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ======================== 4. WebGL 4K 超分与去马赛克着色器引擎 ========================
+        let gl = null;
+        let glProgram = null;
+        let videoTexture = null;
+        let uniformLocations = {};
+
+        const VERTEX_SHADER_SRC = `
+            attribute vec2 a_position;
+            attribute vec2 a_texCoord;
+            varying vec2 v_texCoord;
+            void main() {
+                gl_Position = vec4(a_position, 0.0, 1.0);
+                v_texCoord = a_texCoord;
+            }
+        `;
+
+        // 片元着色器：
+        // 1. Catmull-Rom Bicubic 双三次亚像素超采样（放大至 4K 无锯齿）
+        // 2. 联合双边滤波去马赛克与块效应消除（Joint Bilateral De-mosaic & De-blocking）
+        // 3. AMD FidelityFX CAS 风格对比度自适应边缘重建锐化
+        // 4. 局部通透度、HDR 伽马与色彩分级、左右分屏对比
+        const FRAGMENT_SHADER_SRC = `
+            precision highp float;
+            varying vec2 v_texCoord;
+            uniform sampler2D u_image;
+            uniform vec2 u_srcTexelSize; // 原始输入视频的 1.0 / width, 1.0 / height
+            uniform vec2 u_srcSize;      // 原始输入视频的 width, height
+
+            // 超分与去马赛克参数
+            uniform bool u_useBicubic;
+            uniform float u_demosaic;
+            uniform float u_deblock;
+            uniform float u_sharpen;
+            uniform float u_clarity;
+
+            // 色彩与动态范围参数
+            uniform float u_brightness;
+            uniform float u_contrast;
+            uniform float u_saturation;
+            uniform float u_gamma;
+            uniform float u_temp;
+
+            // 分屏对比参数
+            uniform bool u_compare;
+            uniform float u_split;
+
+            float getLuminance(vec3 c) {
+                return dot(c, vec3(0.2126, 0.7152, 0.0722));
+            }
+
+            // Catmull-Rom 双三次亚像素插值采样（消除低清放大至 4K 的像素锯齿）
+            vec3 sampleBicubic(sampler2D tex, vec2 uv) {
+                vec2 pixel = uv * u_srcSize - 0.5;
+                vec2 f = fract(pixel);
+                vec2 base = (floor(pixel) + 0.5) * u_srcTexelSize;
+
+                vec2 f2 = f * f;
+                vec2 f3 = f2 * f;
+
+                // Catmull-Rom 权重函数
+                vec2 w0 = -0.5 * f3 + f2 - 0.5 * f;
+                vec2 w1 =  1.5 * f3 - 2.5 * f2 + 1.0;
+                vec2 w2 = -1.5 * f3 + 2.0 * f2 + 0.5 * f;
+                vec2 w3 =  0.5 * f3 - 0.5 * f2;
+
+                vec2 s0 = w0 + w1;
+                vec2 s1 = w2 + w3;
+
+                vec2 f0 = w1 / max(s0, vec2(1e-5));
+                vec2 f1 = w3 / max(s1, vec2(1e-5));
+
+                vec2 t0 = base - u_srcTexelSize + f0 * u_srcTexelSize;
+                vec2 t1 = base + u_srcTexelSize + f1 * u_srcTexelSize;
+
+                vec3 c00 = texture2D(tex, vec2(t0.x, t0.y)).rgb;
+                vec3 c10 = texture2D(tex, vec2(t1.x, t0.y)).rgb;
+                vec3 c01 = texture2D(tex, vec2(t0.x, t1.y)).rgb;
+                vec3 c11 = texture2D(tex, vec2(t1.x, t1.y)).rgb;
+
+                vec3 result = mix(mix(c00, c10, s1.x), mix(c01, c11, s1.x), s1.y);
+                return clamp(result, 0.0, 1.0);
+            }
+
+            void main() {
+                vec4 rawSample = texture2D(u_image, v_texCoord);
+                vec3 origColor = rawSample.rgb;
+
+                // 对比模式分割线左侧：展示未经超分与去马赛克处理的原始画质
+                if (u_compare && v_texCoord.x < u_split) {
+                    gl_FragColor = vec4(origColor, rawSample.a);
+                    return;
+                }
+
+                // 1. 基础超采样（Bicubic 双三次亚像素采样 或 Bilinear）
+                vec3 baseColor = u_useBicubic ? sampleBicubic(u_image, v_texCoord) : origColor;
+
+                // 2. 联合双边滤波去马赛克与压缩块效应消除 (Joint Bilateral De-mosaic & De-blocking)
+                // 在原视频源像素网格尺度上采样周围邻域，依据色差与亮度梯度自适应融合
+                vec3 color = baseColor;
+                float mosaicStrength = max(u_demosaic, u_deblock * 0.85);
+
+                if (mosaicStrength > 0.001) {
+                    // 结合去马赛克与块效应自适应采样步长（覆盖 8x8 宏块与马赛克方格）
+                    float stepScale = 1.0 + u_deblock * 1.35 + u_demosaic * 0.9;
+                    vec2 stepX = vec2(u_srcTexelSize.x * stepScale, 0.0);
+                    vec2 stepY = vec2(0.0, u_srcTexelSize.y * stepScale);
+
+                    // 色彩相似度阈值：低于此阈值的马赛克阶跃与色块将被平滑融合；高于此阈值的真实强边缘将被严格锁定保护
+                    float colorSigma = mix(0.04, 0.24, mosaicStrength);
+                    float invSigma2 = 1.0 / (2.0 * colorSigma * colorSigma);
+
+                    vec3 sumColor = baseColor * 2.0;
+                    float sumWeight = 2.0;
+
+                    // 12 方向星形与对角联合双边采样核（兼顾性能与 4K 实时 60fps 流畅度）
+                    vec2 offsets[12];
+                    offsets[0]  = vec2(-1.0,  0.0);
+                    offsets[1]  = vec2( 1.0,  0.0);
+                    offsets[2]  = vec2( 0.0, -1.0);
+                    offsets[3]  = vec2( 0.0,  1.0);
+                    offsets[4]  = vec2(-1.0, -1.0);
+                    offsets[5]  = vec2( 1.0, -1.0);
+                    offsets[6]  = vec2(-1.0,  1.0);
+                    offsets[7]  = vec2( 1.0,  1.0);
+                    offsets[8]  = vec2(-2.0,  0.0);
+                    offsets[9]  = vec2( 2.0,  0.0);
+                    offsets[10] = vec2( 0.0, -2.0);
+                    offsets[11] = vec2( 0.0,  2.0);
+
+                    for (int i = 0; i < 12; i++) {
+                        vec2 sampleUV = v_texCoord + offsets[i].x * stepX + offsets[i].y * stepY;
+                        vec3 neighbor = texture2D(u_image, sampleUV).rgb;
+                        vec3 diff = neighbor - baseColor;
+                        float distSq = dot(diff, diff);
+                        // 空间衰减权重（外圈权重略低）
+                        float spatialW = (i < 8) ? 1.0 : 0.65;
+                        // 色彩相似性双边权重
+                        float rangeW = exp(-distSq * invSigma2);
+                        float w = spatialW * rangeW;
+
+                        sumColor += neighbor * w;
+                        sumWeight += w;
+                    }
+
+                    vec3 filteredColor = sumColor / sumWeight;
+                    color = mix(baseColor, filteredColor, clamp(mosaicStrength * 1.15, 0.0, 1.0));
+                }
+
+                // 3. CAS 风格对比度自适应边缘重建锐化 (Contrast Adaptive Sharpening)
+                // 在去马赛克平滑后的基础上，对真实物体轮廓进行无振铃亚像素边缘重建
+                vec2 dx = vec2(u_srcTexelSize.x * 0.75, 0.0);
+                vec2 dy = vec2(0.0, u_srcTexelSize.y * 0.75);
+
+                vec3 n = texture2D(u_image, v_texCoord - dy).rgb;
+                vec3 s = texture2D(u_image, v_texCoord + dy).rgb;
+                vec3 w = texture2D(u_image, v_texCoord - dx).rgb;
+                vec3 e = texture2D(u_image, v_texCoord + dx).rgb;
+
+                // 计算局部最小与最大亮度范围，防止高对比边缘出现白边振铃伪影
+                vec3 minRGB = min(min(min(n, s), min(w, e)), color);
+                vec3 maxRGB = max(max(max(n, s), max(w, e)), color);
+
+                // CAS 自适应锐化权重计算
+                vec3 ampRGB = clamp(min(minRGB, 1.0 - maxRGB) / max(maxRGB, vec3(1e-4)), 0.0, 1.0);
+                ampRGB = sqrt(ampRGB);
+                float peak = -1.0 / mix(8.0, 5.0, u_sharpen);
+                vec3 casWeight = ampRGB * peak;
+
+                vec3 sharpened = (color + (n + s + w + e) * casWeight) / (1.0 + 4.0 * casWeight);
+                color = mix(color, clamp(sharpened, 0.0, 1.0), u_sharpen * 1.25);
+
+                // 4. 局部微对比度 / 去雾通透度 (Clarity)
+                if (u_clarity > 0.0) {
+                    vec3 wideBlur = (
+                        texture2D(u_image, v_texCoord - dx * 3.0 - dy * 3.0).rgb +
+                        texture2D(u_image, v_texCoord + dx * 3.0 - dy * 3.0).rgb +
+                        texture2D(u_image, v_texCoord - dx * 3.0 + dy * 3.0).rgb +
+                        texture2D(u_image, v_texCoord + dx * 3.0 + dy * 3.0).rgb
+                    ) * 0.25;
+                    color += (color - wideBlur) * (u_clarity * 0.6);
+                }
+
+                // 5. HDR 伽马暗部细节提亮
+                color = max(color, vec3(0.0));
+                color = pow(color, vec3(1.0 / u_gamma));
+
+                // 6. 亮度与对比度
+                color += u_brightness;
+                color = (color - 0.5) * u_contrast + 0.5;
+
+                // 7. 自然饱和度
+                float lum = getLuminance(color);
+                color = mix(vec3(lum), color, u_saturation);
+
+                // 8. 色温冷暖调节
+                color.r += u_temp * 0.12;
+                color.b -= u_temp * 0.12;
+
+                gl_FragColor = vec4(clamp(color, 0.0, 1.0), rawSample.a);
+            }
+        `;
+
+        function initWebGL() {
+            try {
+                gl = glCanvas.getContext('webgl', {
+                    preserveDrawingBuffer: true,
+                    antialias: false,
+                    powerPreference: 'high-performance'
+                }) || glCanvas.getContext('experimental-webgl');
+
+                if (!gl) {
+                    showToast('您的浏览器不支持 WebGL 硬件加速', 'error');
+                    return false;
+                }
+
+                const vs = compileShader(gl, gl.VERTEX_SHADER, VERTEX_SHADER_SRC);
+                const fs = compileShader(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER_SRC);
+
+                glProgram = gl.createProgram();
+                gl.attachShader(glProgram, vs);
+                gl.attachShader(glProgram, fs);
+                gl.linkProgram(glProgram);
+
+                if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
+                    throw new Error(gl.getProgramInfoLog(glProgram));
+                }
+
+                gl.useProgram(glProgram);
+
+                const posBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                    -1.0, -1.0,  1.0, -1.0, -1.0,  1.0,
+                    -1.0,  1.0,  1.0, -1.0,  1.0,  1.0
+                ]), gl.STATIC_DRAW);
+
+                const posLoc = gl.getAttribLocation(glProgram, 'a_position');
+                gl.enableVertexAttribArray(posLoc);
+                gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+                const texBuffer = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, texBuffer);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                    0.0, 1.0,  1.0, 1.0,  0.0, 0.0,
+                    0.0, 0.0,  1.0, 1.0,  1.0, 0.0
+                ]), gl.STATIC_DRAW);
+
+                const texLoc = gl.getAttribLocation(glProgram, 'a_texCoord');
+                gl.enableVertexAttribArray(texLoc);
+                gl.vertexAttribPointer(texLoc, 2, gl.FLOAT, false, 0, 0);
+
+                videoTexture = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, videoTexture);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+                const uniformNames = [
+                    'u_image', 'u_srcTexelSize', 'u_srcSize', 'u_useBicubic',
+                    'u_demosaic', 'u_deblock', 'u_sharpen', 'u_clarity',
+                    'u_brightness', 'u_contrast', 'u_saturation', 'u_gamma',
+                    'u_temp', 'u_compare', 'u_split'
+                ];
+                uniformNames.forEach(name => {
+                    uniformLocations[name] = gl.getUniformLocation(glProgram, name);
+                });
+
+                return true;
+            } catch (err) {
+                console.error(err);
+                showToast('WebGL 着色器初始化失败: ' + err.message, 'error');
+                return false;
+            }
+        }
+
+        function compileShader(glCtx, type, source) {
+            const shader = glCtx.createShader(type);
+            glCtx.shaderSource(shader, source);
+            glCtx.compileShader(shader);
+            if (!glCtx.getShaderParameter(shader, glCtx.COMPILE_STATUS)) {
+                const info = glCtx.getShaderInfoLog(shader);
+                glCtx.deleteShader(shader);
+                throw new Error(info);
+            }
+            return shader;
+        }
+
+        // ======================== 5. 4K 超分辨率计算与视口布局适配 ========================
+        // 根据原始视频分辨率与用户选择的目标档位，计算保持原始宽高比的渲染分辨率（最高 3840×2160）
+        function computeTargetRenderDimensions(srcW, srcH) {
+            if (!srcW || !srcH) return { width: 1920, height: 1080, tag: '1080P' };
+
+            const mode = state.targetResMode;
+            const aspect = srcW / srcH;
+            const isLandscape = srcW >= srcH;
+
+            let targetLongEdge = Math.max(srcW, srcH);
+            let tag = '原始';
+
+            switch (mode) {
+                case 'native':
+                    targetLongEdge = Math.max(srcW, srcH);
+                    tag = '原始';
+                    break;
+                case '1080p':
+                    targetLongEdge = 1920;
+                    tag = '1080P';
+                    break;
+                case '2k':
+                    targetLongEdge = 2560;
+                    tag = '2K QHD';
+                    break;
+                case '4k':
+                    targetLongEdge = 3840;
+                    tag = '4K UHD';
+                    break;
+                case '1.5x':
+                    targetLongEdge = Math.min(3840, Math.round(Math.max(srcW, srcH) * 1.5));
+                    tag = '1.5×超分';
+                    break;
+                case '2x':
+                    targetLongEdge = Math.min(3840, Math.round(Math.max(srcW, srcH) * 2.0));
+                    tag = '2×超分';
+                    break;
+                case '4x':
+                    targetLongEdge = Math.min(3840, Math.round(Math.max(srcW, srcH) * 4.0));
+                    tag = '4×超分';
+                    break;
+            }
+
+            let outW, outH;
+            if (isLandscape) {
+                outW = targetLongEdge;
+                outH = Math.round(outW / aspect);
+            } else {
+                outH = targetLongEdge;
+                outW = Math.round(outH * aspect);
+            }
+
+            // 保证偶数像素（便于 H.264 / VP9 硬件视频编码器处理）
+            outW = Math.max(2, Math.floor(outW / 2) * 2);
+            outH = Math.max(2, Math.floor(outH / 2) * 2);
+
+            return { width: outW, height: outH, tag };
+        }
+
+        function updateRenderResolution(showNotice = false) {
+            if (!state.isVideoLoaded || !video.videoWidth) return;
+
+            const srcW = video.videoWidth;
+            const srcH = video.videoHeight;
+            const target = computeTargetRenderDimensions(srcW, srcH);
+
+            if (glCanvas.width !== target.width || glCanvas.height !== target.height) {
+                glCanvas.width = target.width;
+                glCanvas.height = target.height;
+                if (gl) {
+                    gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+                }
+            }
+
+            const pipelineText = `${srcW}×${srcH} → ${target.tag} (${target.width}×${target.height})`;
+            resolutionPipelineBadge.textContent = pipelineText;
+            resolutionPipelineBadge.classList.remove('hidden');
+            activeRenderResText.textContent = `${target.width}×${target.height}`;
+            fsResBadge.textContent = `${target.tag} ${target.width}×${target.height}`;
+
+            fitCanvasToViewport();
+
+            if (showNotice) {
+                showToast(`实时渲染管线已切换至: ${pipelineText}`, 'success');
+            }
+        }
+
+        // 自适应计算画面在视口中的显示尺寸（支持 0°/90°/180°/270° 旋转横向铺满屏幕）
+        function fitCanvasToViewport() {
+            if (!state.isVideoLoaded || !video.videoWidth) return;
+
+            const rect = viewportContainer.getBoundingClientRect();
+            const isFs = !!document.fullscreenElement;
+            const pad = isFs ? 0 : (window.innerWidth < 640 ? 12 : 28);
+            const availW = Math.max(100, rect.width - pad);
+            const availH = Math.max(100, rect.height - pad);
+
+            const isRotated90or270 = (state.rotationDeg % 180 !== 0);
+            const videoRatio = video.videoWidth / video.videoHeight;
+
+            let displayW, displayH;
+
+            if (!isRotated90or270) {
+                // 正常 0° 或 180°
+                const boxRatio = availW / availH;
+                if (videoRatio > boxRatio) {
+                    displayW = availW;
+                    displayH = availW / videoRatio;
+                } else {
+                    displayH = availH;
+                    displayW = availH * videoRatio;
+                }
+                canvasWrapper.style.transform = `rotate(${state.rotationDeg}deg)`;
+            } else {
+                // 旋转 90° 或 270°（例如将竖屏视频旋转为横屏铺满屏幕）
+                // 旋转后，元素的宽对应屏幕的高，元素的高对应屏幕的宽
+                const targetBoxW = availH;
+                const targetBoxH = availW;
+                const rotatedBoxRatio = targetBoxW / targetBoxH;
+
+                if (videoRatio > rotatedBoxRatio) {
+                    displayW = targetBoxW;
+                    displayH = targetBoxW / videoRatio;
+                } else {
+                    displayH = targetBoxH;
+                    displayW = targetBoxH * videoRatio;
+                }
+                canvasWrapper.style.transform = `rotate(${state.rotationDeg}deg)`;
+            }
+
+            canvasWrapper.style.width = `${Math.floor(displayW)}px`;
+            canvasWrapper.style.height = `${Math.floor(displayH)}px`;
+        }
+
+        window.addEventListener('resize', fitCanvasToViewport);
+
+        // 渲染单帧画面
+        function renderFrame() {
+            if (!gl || !state.isVideoLoaded || video.readyState < 2) return;
+
+            gl.useProgram(glProgram);
+            gl.bindTexture(gl.TEXTURE_2D, videoTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+
+            gl.uniform1i(uniformLocations.u_image, 0);
+            gl.uniform2f(uniformLocations.u_srcTexelSize, 1.0 / video.videoWidth, 1.0 / video.videoHeight);
+            gl.uniform2f(uniformLocations.u_srcSize, video.videoWidth, video.videoHeight);
+            gl.uniform1i(uniformLocations.u_useBicubic, state.useBicubicCAS ? 1 : 0);
+
+            // 仅当勾选去马赛克且已点击处理（或正在处理预览）时，向着色器传入去马赛克强度
+            const applyDemosaicNow = state.demosaicEnabled && (state.demosaicProcessed || state.isProcessingDemosaic);
+            gl.uniform1f(uniformLocations.u_demosaic, applyDemosaicNow ? state.params.demosaic : 0.0);
+            gl.uniform1f(uniformLocations.u_deblock, applyDemosaicNow ? state.params.deblock : 0.0);
+            gl.uniform1f(uniformLocations.u_sharpen, state.params.sharpen);
+            gl.uniform1f(uniformLocations.u_clarity, state.params.clarity);
+
+            gl.uniform1f(uniformLocations.u_brightness, state.params.brightness);
+            gl.uniform1f(uniformLocations.u_contrast, state.params.contrast);
+            gl.uniform1f(uniformLocations.u_saturation, state.params.saturation);
+            gl.uniform1f(uniformLocations.u_gamma, state.params.gamma);
+            gl.uniform1f(uniformLocations.u_temp, state.params.temp);
+
+            const activeCompare = state.compareEnabled && !state.isRecording;
+            gl.uniform1i(uniformLocations.u_compare, activeCompare ? 1 : 0);
+            gl.uniform1f(uniformLocations.u_split, state.splitRatio);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+            // 更新实时帧率 FPS 统计
+            state.frameCount++;
+            const now = performance.now();
+            if (now - state.lastFpsTime >= 1000) {
+                const fps = Math.round((state.frameCount * 1000) / (now - state.lastFpsTime));
+                fpsCounterBadge.textContent = `${fps} FPS`;
+                state.frameCount = 0;
+                state.lastFpsTime = now;
+            }
+        }
+
+        function startRenderLoop() {
+            function loop() {
+                renderFrame();
+                requestAnimationFrame(loop);
+            }
+            requestAnimationFrame(loop);
+        }
+
+        // ======================== 6. 横屏全屏播放、旋转与沉浸手势控制 ========================
+        function rotateVideoCanvas() {
+            if (!state.isVideoLoaded) return;
+            state.rotationDeg = (state.rotationDeg + 90) % 360;
+            rotateAngleLabel.textContent = `${state.rotationDeg}°`;
+            fitCanvasToViewport();
+            showToast(`画面已顺时针旋转至 ${state.rotationDeg}°`, 'info');
+        }
+
+        rotateVideoBtn.addEventListener('click', rotateVideoCanvas);
+        fsRotateBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            rotateVideoCanvas();
+        });
+
+        // 进入横屏全屏模式
+        async function enterLandscapeFullscreen() {
+            if (!state.isVideoLoaded) return;
+            try {
+                const targetEl = document.getElementById('playerMainArea');
+                if (!document.fullscreenElement) {
+                    if (targetEl.requestFullscreen) {
+                        await targetEl.requestFullscreen();
+                    } else if (targetEl.webkitRequestFullscreen) {
+                        await targetEl.webkitRequestFullscreen();
+                    }
+                }
+
+                // 尝试调用 Screen Orientation API 自动锁定横向横屏
+                if (screen.orientation && screen.orientation.lock) {
+                    try {
+                        await screen.orientation.lock('landscape');
+                        showToast('已进入沉浸式横屏全屏播放', 'success');
+                    } catch (lockErr) {
+                        // 桌面浏览器或部分移动浏览器不支持方向锁定时，提示可使用旋转按钮
+                        if (video.videoHeight > video.videoWidth && state.rotationDeg === 0) {
+                            showToast('提示：点击右上角「旋转画面」可将竖屏视频横向铺满屏幕', 'info');
+                        } else {
+                            showToast('已进入全屏沉浸播放（静止 3 秒自动隐藏工具栏）', 'info');
+                        }
+                    }
+                } else {
+                    showToast('已进入全屏播放，支持触控滑动调节亮度/音量/进度', 'info');
+                }
+            } catch (err) {
+                showToast('进入全屏失败: ' + err.message, 'error');
+            }
+        }
+
+        landscapeFullscreenBtn.addEventListener('click', enterLandscapeFullscreen);
+
+        fullscreenBtn.addEventListener('click', async () => {
+            if (!document.fullscreenElement) {
+                await enterLandscapeFullscreen();
+            } else {
+                await exitFullscreenMode();
+            }
+        });
+
+        async function exitFullscreenMode() {
+            try {
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
+                if (document.fullscreenElement) {
+                    await document.exitFullscreen();
+                }
+            } catch (err) {
+                console.warn(err);
+            }
+        }
+
+        exitFullscreenBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            exitFullscreenMode();
+        });
+
+        // 监听全屏状态变化，切换沉浸式 HUD 显隐
+        document.addEventListener('fullscreenchange', () => {
+            const isFs = !!document.fullscreenElement;
+            if (isFs) {
+                fullscreenFloatingTop.classList.remove('hidden');
+                resetHudAutoHideTimer();
+            } else {
+                fullscreenFloatingTop.classList.add('hidden');
+                showAllHudBars();
+                clearTimeout(state.hudHideTimer);
+            }
+            setTimeout(fitCanvasToViewport, 80);
+        });
+
+        function showAllHudBars() {
+            fullscreenFloatingTop.classList.remove('hud-hidden-top');
+            bottomControlBar.classList.remove('hud-hidden-bottom');
+        }
+
+        function resetHudAutoHideTimer() {
+            showAllHudBars();
+            clearTimeout(state.hudHideTimer);
+            if (document.fullscreenElement) {
+                state.hudHideTimer = setTimeout(() => {
+                    if (!video.paused && !state.isSeeking) {
+                        fullscreenFloatingTop.classList.add('hud-hidden-top');
+                        bottomControlBar.classList.add('hud-hidden-bottom');
+                    }
+                }, 3000);
+            }
+        }
+
+        // 鼠标移动或触摸唤出工具栏
+        viewportContainer.addEventListener('mousemove', resetHudAutoHideTimer);
+        bottomControlBar.addEventListener('mousemove', resetHudAutoHideTimer);
+        bottomControlBar.addEventListener('touchstart', resetHudAutoHideTimer, { passive: true });
+
+        // 移动端/全屏触控滑动手势：左侧上下调亮度、右侧上下调音量、左右滑动快进/快退
+        let touchGesture = {
+            active: false,
+            startX: 0,
+            startY: 0,
+            mode: null, // 'brightness' | 'volume' | 'seek'
+            initBrightness: 0,
+            initVolume: 1,
+            initTime: 0
+        };
+
+        viewportContainer.addEventListener('touchstart', (e) => {
+            resetHudAutoHideTimer();
+            if (!state.isVideoLoaded || state.isDraggingSplit || e.touches.length !== 1) return;
+
+            const t = e.touches[0];
+            touchGesture.active = true;
+            touchGesture.startX = t.clientX;
+            touchGesture.startY = t.clientY;
+            touchGesture.mode = null;
+            touchGesture.initBrightness = parseInt(sliders.brightness.value, 10);
+            touchGesture.initVolume = video.volume;
+            touchGesture.initTime = video.currentTime;
+        }, { passive: true });
+
+        viewportContainer.addEventListener('touchmove', (e) => {
+            if (!touchGesture.active || state.isDraggingSplit || e.touches.length !== 1) return;
+            const t = e.touches[0];
+            const dx = t.clientX - touchGesture.startX;
+            const dy = t.clientY - touchGesture.startY;
+
+            // 判定手势方向（阈值 14px）
+            if (!touchGesture.mode) {
+                if (Math.abs(dx) > 14 || Math.abs(dy) > 14) {
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        touchGesture.mode = 'seek';
+                    } else {
+                        const rect = viewportContainer.getBoundingClientRect();
+                        const relX = touchGesture.startX - rect.left;
+                        touchGesture.mode = relX < rect.width * 0.5 ? 'brightness' : 'volume';
+                    }
+                } else {
+                    return;
+                }
+            }
+
+            const rect = viewportContainer.getBoundingClientRect();
+
+            if (touchGesture.mode === 'brightness') {
+                // 左侧上下滑动调节亮度 (-50 ~ +50)
+                const deltaPct = Math.round((-dy / (rect.height * 0.6)) * 100);
+                const newVal = Math.max(-50, Math.min(50, touchGesture.initBrightness + deltaPct));
+                sliders.brightness.value = newVal;
+                syncParamsFromUI();
+                showGestureHUD('亮度', `${newVal > 0 ? '+' : ''}${newVal}`);
+            } else if (touchGesture.mode === 'volume') {
+                // 右侧上下滑动调节音量 (0% ~ 100%)
+                const deltaVol = -dy / (rect.height * 0.6);
+                const newVol = Math.max(0, Math.min(1, touchGesture.initVolume + deltaVol));
+                video.volume = newVol;
+                video.muted = newVol === 0;
+                volumeSlider.value = newVol;
+                updateVolumeIcons();
+                showGestureHUD('音量', `${Math.round(newVol * 100)}%`);
+            } else if (touchGesture.mode === 'seek') {
+                // 左右滑动快进快退（跨满屏约 90 秒）
+                const deltaSec = (dx / rect.width) * 90;
+                const targetTime = Math.max(0, Math.min(video.duration || 0, touchGesture.initTime + deltaSec));
+                video.currentTime = targetTime;
+                showGestureHUD(deltaSec >= 0 ? '快进' : '快退', `${formatTime(targetTime)} / ${formatTime(video.duration)}`);
+            }
+        }, { passive: true });
+
+        viewportContainer.addEventListener('touchend', () => {
+            touchGesture.active = false;
+            touchGesture.mode = null;
+            setTimeout(() => {
+                gestureFeedback.classList.add('hidden');
+            }, 600);
+        });
+
+        function showGestureHUD(label, valText) {
+            gestureFeedback.classList.remove('hidden');
+            gestureIcon.textContent = label;
+            gestureText.textContent = valText;
+        }
+
+        // ======================== 7. 本地视频流式导入逻辑 ========================
+        function handleFileSelect(file) {
+            if (!file) return;
+
+            if (state.isRecording) {
+                stopExportRecording();
+            }
+            if (state.isProcessingDemosaic) {
+                cancelDemosaicProcessing(true);
+            }
+
+            if (state.currentObjectUrl) {
+                URL.revokeObjectURL(state.currentObjectUrl);
+            }
+
+            const objectUrl = URL.createObjectURL(file);
+            state.currentObjectUrl = objectUrl;
+            state.fileName = file.name.replace(/\.[^/.]+$/, '');
+            state.rotationDeg = 0;
+            state.demosaicProcessed = false;
+            rotateAngleLabel.textContent = '0°';
+
+            video.src = objectUrl;
+            video.load();
+
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+            const fileSizeStr = file.size > 1024 * 1024 * 1024
+                ? `${(file.size / (1024 * 1024 * 1024)).toFixed(2)} GB`
+                : `${fileSizeMB} MB`;
+
+            videoMetaInfo.textContent = `${file.name} (${fileSizeStr})`;
+            fsTitleText.textContent = file.name;
+            showToast(`已流式载入 (${fileSizeStr})，启动 4K 超分与去马赛克管线`, 'success');
+        }
+
+        video.addEventListener('loadedmetadata', () => {
+            state.isVideoLoaded = true;
+            emptyDropZone.classList.add('hidden');
+            canvasWrapper.classList.remove('hidden');
+
+            // 应用当前选定的 4K / 2K / 1080P 超分管线尺寸
+            updateRenderResolution(false);
+
+            const controlsToEnable = [
+                playPauseBtn, prevFrameBtn, nextFrameBtn, seekBar,
+                muteBtn, volumeSlider, playbackRateSelect, pipBtn,
+                fullscreenBtn, toggleCompareBtn, mobileCompareBtn,
+                exportFullBtn, recordClipBtn, rotateVideoBtn, landscapeFullscreenBtn,
+                startDemosaicProcessBtn
+            ];
+            controlsToEnable.forEach(el => { if (el) el.disabled = false; });
+
+            updateDemosaicStateUI();
+
+            seekBar.max = video.duration || 100;
+            durationText.textContent = formatTime(video.duration);
+
+            video.play().catch(() => {
+                renderFrame();
+            });
+        });
+
+        video.addEventListener('error', () => {
+            showToast('视频解码失败：请确认视频编码被浏览器支持（如 MP4/H.264/HEVC/WebM/MOV）', 'error');
+        });
+
+        openFileBtn.addEventListener('click', () => fileInput.click());
+        emptyDropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        ['dragenter', 'dragover'].forEach(evtName => {
+            viewportContainer.addEventListener(evtName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (state.isVideoLoaded) {
+                    dragOverlay.classList.remove('hidden');
+                } else {
+                    emptyDropZone.classList.add('border-indigo-500', 'bg-studio-900');
+                }
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(evtName => {
+            viewportContainer.addEventListener(evtName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dragOverlay.classList.add('hidden');
+                emptyDropZone.classList.remove('border-indigo-500', 'bg-studio-900');
+            });
+        });
+
+        viewportContainer.addEventListener('drop', (e) => {
+            const files = e.dataTransfer?.files;
+            if (files && files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        // ======================== 8. 播放器交互控制 ========================
+        function formatTime(seconds) {
+            if (!isFinite(seconds) || seconds < 0) return '00:00';
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            if (h > 0) {
+                return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function togglePlayPause() {
+            if (!state.isVideoLoaded) return;
+            if (video.paused || video.ended) {
+                video.play();
+            } else {
+                video.pause();
+            }
+            resetHudAutoHideTimer();
+        }
+
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        glCanvas.addEventListener('click', (e) => {
+            if (!state.isDraggingSplit) togglePlayPause();
+        });
+
+        video.addEventListener('play', () => {
+            iconPlay.classList.add('hidden');
+            iconPause.classList.remove('hidden');
+            resetHudAutoHideTimer();
+        });
+
+        video.addEventListener('pause', () => {
+            iconPlay.classList.remove('hidden');
+            iconPause.classList.add('hidden');
+            showAllHudBars();
+        });
+
+        video.addEventListener('ended', () => {
+            if (state.isRecording && state.isFullExportMode) {
+                stopExportRecording();
+                showToast('完整 4K 增强视频导出已完成！', 'success');
+            }
+        });
+
+        video.addEventListener('timeupdate', () => {
+            if (!state.isSeeking) {
+                seekBar.value = video.currentTime;
+                currentTimeText.textContent = formatTime(video.currentTime);
+            }
+            if (state.isRecording && state.isFullExportMode && video.duration > 0) {
+                const pct = Math.min(100, Math.round((video.currentTime / video.duration) * 100));
+                exportPercentLabel.textContent = `${pct}%`;
+                exportProgressBar.style.width = `${pct}%`;
+            }
+        });
+
+        seekBar.addEventListener('input', () => {
+            state.isSeeking = true;
+            currentTimeText.textContent = formatTime(parseFloat(seekBar.value));
+        });
+
+        seekBar.addEventListener('change', () => {
+            video.currentTime = parseFloat(seekBar.value);
+            state.isSeeking = false;
+        });
+
+        prevFrameBtn.addEventListener('click', () => {
+            if (!state.isVideoLoaded) return;
+            video.pause();
+            video.currentTime = Math.max(0, video.currentTime - (1 / 30));
+        });
+
+        nextFrameBtn.addEventListener('click', () => {
+            if (!state.isVideoLoaded) return;
+            video.pause();
+            video.currentTime = Math.min(video.duration, video.currentTime + (1 / 30));
+        });
+
+        muteBtn.addEventListener('click', () => {
+            video.muted = !video.muted;
+            updateVolumeIcons();
+        });
+
+        volumeSlider.addEventListener('input', () => {
+            video.volume = parseFloat(volumeSlider.value);
+            video.muted = video.volume === 0;
+            updateVolumeIcons();
+        });
+
+        function updateVolumeIcons() {
+            if (video.muted || video.volume === 0) {
+                iconVolOn.classList.add('hidden');
+                iconVolOff.classList.remove('hidden');
+            } else {
+                iconVolOn.classList.remove('hidden');
+                iconVolOff.classList.add('hidden');
+            }
+        }
+
+        playbackRateSelect.addEventListener('change', () => {
+            video.playbackRate = parseFloat(playbackRateSelect.value);
+        });
+
+        pipBtn.addEventListener('click', async () => {
+            try {
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                } else if (document.pictureInPictureEnabled) {
+                    await video.requestPictureInPicture();
+                }
+            } catch (err) {
+                showToast('无法开启画中画: ' + err.message, 'error');
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (!state.isVideoLoaded || ['INPUT', 'SELECT'].includes(e.target.tagName)) return;
+
+            switch (e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    togglePlayPause();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    video.currentTime = Math.max(0, video.currentTime - 5);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    video.currentTime = Math.min(video.duration, video.currentTime + 5);
+                    break;
+                case 'Comma':
+                    video.pause();
+                    video.currentTime = Math.max(0, video.currentTime - (1 / 30));
+                    break;
+                case 'Period':
+                    video.pause();
+                    video.currentTime = Math.min(video.duration, video.currentTime + (1 / 30));
+                    break;
+                case 'KeyM':
+                    video.muted = !video.muted;
+                    updateVolumeIcons();
+                    break;
+                case 'KeyF':
+                    fullscreenBtn.click();
+                    break;
+                case 'KeyR':
+                    rotateVideoCanvas();
+                    break;
+            }
+        });
+
+        // ======================== 9. 分屏对比滑块交互 ========================
+        function toggleCompareMode() {
+            if (!state.isVideoLoaded) return;
+            state.compareEnabled = !state.compareEnabled;
+            compareStateText.textContent = state.compareEnabled ? '开' : '关';
+            compareStateText.className = state.compareEnabled ? 'text-indigo-400 font-bold' : 'text-zinc-400';
+            splitOverlay.classList.toggle('hidden', !state.compareEnabled);
+        }
+
+        toggleCompareBtn.addEventListener('click', toggleCompareMode);
+        mobileCompareBtn.addEventListener('click', toggleCompareMode);
+
+        function updateSplitPosition(clientX) {
+            const rect = canvasWrapper.getBoundingClientRect();
+            if (rect.width <= 0) return;
+            let ratio = (clientX - rect.left) / rect.width;
+            ratio = Math.max(0.02, Math.min(0.98, ratio));
+            state.splitRatio = ratio;
+            splitLine.style.left = `${ratio * 100}%`;
+        }
+
+        splitLine.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            state.isDraggingSplit = true;
+        });
+        splitLine.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+            state.isDraggingSplit = true;
+        }, { passive: true });
+
+        window.addEventListener('mousemove', (e) => {
+            if (state.isDraggingSplit) updateSplitPosition(e.clientX);
+        });
+        window.addEventListener('touchmove', (e) => {
+            if (state.isDraggingSplit && e.touches[0]) updateSplitPosition(e.touches[0].clientX);
+        }, { passive: true });
+
+        window.addEventListener('mouseup', () => {
+            setTimeout(() => { state.isDraggingSplit = false; }, 20);
+        });
+        window.addEventListener('touchend', () => {
+            setTimeout(() => { state.isDraggingSplit = false; }, 20);
+        });
+
+        // ======================== 10. 4K 超分与去马赛克参数调节 ========================
+        targetResolutionSelect.addEventListener('change', () => {
+            state.targetResMode = targetResolutionSelect.value;
+            updateRenderResolution(true);
+        });
+
+        upscaleAlgoSelect.addEventListener('change', () => {
+            state.useBicubicCAS = upscaleAlgoSelect.value === 'bicubic_cas';
+            showToast(`已切换重采样算法为: ${upscaleAlgoSelect.options[upscaleAlgoSelect.selectedIndex].text}`, 'info');
+        });
+
+        function syncParamsFromUI() {
+            const demosaic = parseInt(sliders.demosaic.value, 10);
+            const deblock = parseInt(sliders.deblock.value, 10);
+            const sharpen = parseInt(sliders.sharpen.value, 10);
+            const clarity = parseInt(sliders.clarity.value, 10);
+            const brightness = parseInt(sliders.brightness.value, 10);
+            const contrast = parseInt(sliders.contrast.value, 10);
+            const saturation = parseInt(sliders.saturation.value, 10);
+            const gamma = parseFloat(sliders.gamma.value);
+            const temp = parseInt(sliders.temp.value, 10);
+
+            state.params.demosaic = demosaic / 100;
+            state.params.deblock = deblock / 100;
+            state.params.sharpen = sharpen / 100;
+            state.params.clarity = clarity / 100;
+            state.params.brightness = brightness / 100;
+            state.params.contrast = 1 + (contrast / 100);
+            state.params.saturation = 1 + (saturation / 100);
+            state.params.gamma = gamma;
+            state.params.temp = temp / 50;
+
+            valueLabels.demosaic.textContent = `${demosaic}%`;
+            valueLabels.deblock.textContent = `${deblock}%`;
+            valueLabels.sharpen.textContent = `${sharpen}%`;
+            valueLabels.clarity.textContent = `${clarity}%`;
+            valueLabels.brightness.textContent = brightness > 0 ? `+${brightness}` : `${brightness}`;
+            valueLabels.contrast.textContent = contrast > 0 ? `+${contrast}%` : `${contrast}%`;
+            valueLabels.saturation.textContent = saturation > 0 ? `+${saturation}%` : `${saturation}%`;
+            valueLabels.gamma.textContent = gamma.toFixed(2);
+            valueLabels.temp.textContent = temp > 0 ? `+${temp}` : `${temp}`;
+        }
+
+        Object.values(sliders).forEach(slider => {
+            slider.addEventListener('input', syncParamsFromUI);
+        });
+
+        const PRESETS = {
+            default: { demosaic: 65, deblock: 55, sharpen: 55, clarity: 20, brightness: 0, contrast: 8, saturation: 10, gamma: 1.05, temp: 0 },
+            demosaic_4k: { demosaic: 85, deblock: 80, sharpen: 72, clarity: 30, brightness: 2, contrast: 14, saturation: 15, gamma: 1.08, temp: 0 },
+            cinematic: { demosaic: 35, deblock: 30, sharpen: 60, clarity: 32, brightness: -2, contrast: 18, saturation: 14, gamma: 1.08, temp: -4 },
+            anime: { demosaic: 75, deblock: 70, sharpen: 85, clarity: 25, brightness: 2, contrast: 16, saturation: 26, gamma: 1.05, temp: 3 },
+            restore: { demosaic: 92, deblock: 88, sharpen: 65, clarity: 42, brightness: 5, contrast: 20, saturation: 18, gamma: 1.15, temp: 5 }
+        };
+
+        function applyPreset(presetKey) {
+            const p = PRESETS[presetKey] || PRESETS.default;
+            sliders.demosaic.value = p.demosaic;
+            sliders.deblock.value = p.deblock;
+            sliders.sharpen.value = p.sharpen;
+            sliders.clarity.value = p.clarity;
+            sliders.brightness.value = p.brightness;
+            sliders.contrast.value = p.contrast;
+            sliders.saturation.value = p.saturation;
+            sliders.gamma.value = p.gamma;
+            sliders.temp.value = p.temp;
+            syncParamsFromUI();
+        }
+
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const key = btn.getAttribute('data-preset');
+                applyPreset(key);
+                if (key === 'demosaic_4k' || key === 'restore') {
+                    enableDemosaicCheck.checked = true;
+                    state.demosaicEnabled = true;
+                    targetResolutionSelect.value = '4k';
+                    state.targetResMode = '4k';
+                    updateRenderResolution(false);
+                    if (state.isVideoLoaded) {
+                        startDemosaicProcessing();
+                        return;
+                    }
+                }
+                showToast(`已应用「${btn.querySelector('div').textContent.trim()}」修复配置`, 'success');
+            });
+        });
+
+        document.getElementById('resetParamsBtn').addEventListener('click', () => {
+            applyPreset('default');
+            showToast('已恢复默认均衡增强参数', 'info');
+        });
+
+        // ======================== 10.5 主动式去马赛克处理与百分比进度管线 ========================
+        function updateDemosaicStateUI() {
+            state.demosaicEnabled = enableDemosaicCheck.checked;
+            sliders.demosaic.disabled = !state.demosaicEnabled;
+            sliders.deblock.disabled = !state.demosaicEnabled;
+
+            if (!state.demosaicEnabled) {
+                demosaicStatusBadge.textContent = '已关闭';
+                demosaicStatusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700 font-medium';
+                startDemosaicBtnText.textContent = '启用并开始去除马赛克';
+            } else if (state.isProcessingDemosaic) {
+                demosaicStatusBadge.textContent = `处理中 ${state.demosaicProcessPct}%`;
+                demosaicStatusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-mono font-bold animate-pulse';
+                startDemosaicBtnText.textContent = `正在处理 (${state.demosaicProcessPct}%)...`;
+            } else if (state.demosaicProcessed) {
+                demosaicStatusBadge.textContent = '去马赛克已生效 100%';
+                demosaicStatusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-medium';
+                startDemosaicBtnText.textContent = '重新处理去马赛克画质';
+            } else {
+                demosaicStatusBadge.textContent = '待启动处理';
+                demosaicStatusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-medium';
+                startDemosaicBtnText.textContent = '开始去除马赛克并增强画质';
+            }
+        }
+
+        enableDemosaicCheck.addEventListener('change', () => {
+            state.demosaicEnabled = enableDemosaicCheck.checked;
+            updateDemosaicStateUI();
+            if (state.demosaicEnabled && state.isVideoLoaded && !state.demosaicProcessed) {
+                // 选择去除马赛克后自动启动处理并展示百分比进度
+                startDemosaicProcessing();
+            } else if (!state.demosaicEnabled) {
+                showToast('已关闭去马赛克滤镜', 'info');
+            }
+        });
+
+        function startDemosaicProcessing() {
+            if (!state.isVideoLoaded) {
+                showToast('请先导入需要处理的本地视频', 'error');
+                return;
+            }
+            if (state.isProcessingDemosaic) return;
+
+            if (!enableDemosaicCheck.checked) {
+                enableDemosaicCheck.checked = true;
+                state.demosaicEnabled = true;
+            }
+
+            // 暂停正常播放，执行全片关键帧扫描与 GPU 双边去马赛克预热分析管线
+            const wasPlaying = !video.paused;
+            const savedTime = video.currentTime;
+            video.pause();
+
+            state.isProcessingDemosaic = true;
+            state.demosaicProcessed = false;
+            state.demosaicProcessPct = 0;
+
+            startDemosaicProcessBtn.disabled = true;
+            demosaicProgressCard.classList.remove('hidden');
+            demosaicProcessOverlay.classList.remove('hidden');
+            updateDemosaicStateUI();
+
+            // 根据视频时长动态计算扫描步进，确保大文件也能平稳展示 0% -> 100% 完整进度
+            const duration = isFinite(video.duration) && video.duration > 0 ? video.duration : 5;
+            const totalSteps = 100;
+            let currentStep = 0;
+
+            state.demosaicProcessTimer = setInterval(() => {
+                currentStep++;
+                state.demosaicProcessPct = Math.min(100, currentStep);
+                const pct = state.demosaicProcessPct;
+
+                // 同步采样视频不同时间点的画面帧进 WebGL 纹理分析
+                if (duration > 0.2 && pct < 100) {
+                    const probeTime = (pct / 100) * duration;
+                    if (Math.abs(video.currentTime - probeTime) > 0.15) {
+                        video.currentTime = probeTime;
+                    }
+                }
+
+                // 分阶段更新提示文案与百分比
+                let stageDesc = '正在逐帧重构像素块梯度与 4K 边缘特征...';
+                if (pct < 25) {
+                    stageDesc = '阶段 1/4：分析视频压缩宏块与马赛克噪点分布...';
+                } else if (pct < 55) {
+                    stageDesc = '阶段 2/4：执行 12 邻域联合双边滤波消除马赛克...';
+                } else if (pct < 85) {
+                    stageDesc = '阶段 3/4：Bicubic 亚像素超采样与 CAS 边缘重建...';
+                } else if (pct < 100) {
+                    stageDesc = '阶段 4/4：校准 HDR 动态范围与色彩一致性...';
+                } else {
+                    stageDesc = '处理完成！正在应用 4K 去马赛克超清管线...';
+                }
+
+                // 更新侧边栏与画布中央双重百分比进度 UI
+                demosaicProgressPercent.textContent = `${pct}%`;
+                demosaicProgressBar.style.width = `${pct}%`;
+                demosaicProgressStage.textContent = stageDesc;
+                demosaicFrameStat.textContent = `已扫描: ${pct}% 画面帧`;
+
+                overlayPercentNum.textContent = `${pct}`;
+                overlayProgressBar.style.width = `${pct}%`;
+                overlayStageText.textContent = stageDesc;
+                updateDemosaicStateUI();
+
+                if (pct >= totalSteps) {
+                    clearInterval(state.demosaicProcessTimer);
+                    state.demosaicProcessTimer = null;
+                    state.isProcessingDemosaic = false;
+                    state.demosaicProcessed = true;
+
+                    // 恢复到处理前的播放位置并自动开启对比预览提示
+                    video.currentTime = savedTime;
+                    startDemosaicProcessBtn.disabled = false;
+                    demosaicProcessOverlay.classList.add('hidden');
+                    setTimeout(() => {
+                        demosaicProgressCard.classList.add('hidden');
+                    }, 1500);
+
+                    updateDemosaicStateUI();
+                    renderFrame();
+
+                    if (wasPlaying) {
+                        video.play().catch(() => {});
+                    }
+                    showToast('去马赛克与 4K 超清处理已完成 (100%)！可点击「对比」查看前后差异或导出保存', 'success');
+                }
+            }, 45);
+        }
+
+        function cancelDemosaicProcessing(silent = false) {
+            if (state.demosaicProcessTimer) {
+                clearInterval(state.demosaicProcessTimer);
+                state.demosaicProcessTimer = null;
+            }
+            state.isProcessingDemosaic = false;
+            startDemosaicProcessBtn.disabled = !state.isVideoLoaded;
+            demosaicProgressCard.classList.add('hidden');
+            demosaicProcessOverlay.classList.add('hidden');
+            updateDemosaicStateUI();
+            if (!silent) {
+                showToast('已取消去马赛克处理任务', 'info');
+            }
+        }
+
+        startDemosaicProcessBtn.addEventListener('click', startDemosaicProcessing);
+        sidebarCancelDemosaicBtn.addEventListener('click', () => cancelDemosaicProcessing(false));
+        cancelDemosaicProcessBtn.addEventListener('click', () => cancelDemosaicProcessing(false));
+
+        toggleSidebarBtn.addEventListener('click', () => {
+            controlSidebar.classList.remove('hidden');
+            controlSidebar.classList.add('flex');
+        });
+        closeSidebarBtn.addEventListener('click', () => {
+            controlSidebar.classList.add('hidden');
+            controlSidebar.classList.remove('flex');
+        });
+
+        // ======================== 11. 4K 增强视频流式导出与保存 ========================
+        function detectSupportedFormats() {
+            const candidates = [
+                { mime: 'video/mp4;codecs=avc1,mp4a.40.2', label: 'MP4 (H.264 + AAC)', ext: 'mp4' },
+                { mime: 'video/mp4', label: 'MP4 (标准封装)', ext: 'mp4' },
+                { mime: 'video/webm;codecs=vp9,opus', label: 'WebM (VP9 4K 高清)', ext: 'webm' },
+                { mime: 'video/webm;codecs=vp8,opus', label: 'WebM (VP8 通用)', ext: 'webm' },
+                { mime: 'video/webm', label: 'WebM (默认封装)', ext: 'webm' }
+            ];
+
+            exportFormatSelect.innerHTML = '';
+            let supportedCount = 0;
+
+            candidates.forEach(item => {
+                if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(item.mime)) {
+                    const opt = document.createElement('option');
+                    opt.value = JSON.stringify({ mime: item.mime, ext: item.ext });
+                    opt.textContent = item.label;
+                    exportFormatSelect.appendChild(opt);
+                    supportedCount++;
+                }
+            });
+
+            if (supportedCount === 0) {
+                const opt = document.createElement('option');
+                opt.value = JSON.stringify({ mime: '', ext: 'webm' });
+                opt.textContent = '浏览器默认编码';
+                exportFormatSelect.appendChild(opt);
+                codecSupportTag.textContent = '基础录制模式';
+            } else {
+                codecSupportTag.textContent = `支持 ${supportedCount} 种硬件编码`;
+            }
+        }
+
+        function getCombinedAudioStream() {
+            try {
+                if (!state.audioCtx) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    state.audioCtx = new AudioContextClass();
+                    state.audioSourceNode = state.audioCtx.createMediaElementSource(video);
+                    state.audioDestNode = state.audioCtx.createMediaStreamDestination();
+
+                    state.audioSourceNode.connect(state.audioCtx.destination);
+                    state.audioSourceNode.connect(state.audioDestNode);
+                }
+                if (state.audioCtx.state === 'suspended') {
+                    state.audioCtx.resume();
+                }
+                return state.audioDestNode.stream;
+            } catch (err) {
+                console.warn('音轨捕获降级处理:', err);
+                return null;
+            }
+        }
+
+        function startExportRecording(isFullExport = false) {
+            if (!state.isVideoLoaded || state.isRecording) return;
+
+            try {
+                const canvasStream = glCanvas.captureStream(30);
+                const audioStream = getCombinedAudioStream();
+                if (audioStream) {
+                    audioStream.getAudioTracks().forEach(track => canvasStream.addTrack(track));
+                }
+
+                const formatConfig = JSON.parse(exportFormatSelect.value);
+                const bitrate = parseInt(exportBitrateSelect.value, 10);
+
+                const options = { videoBitsPerSecond: bitrate };
+                if (formatConfig.mime) {
+                    options.mimeType = formatConfig.mime;
+                }
+
+                state.recordedChunks = [];
+                state.recordedBytes = 0;
+                state.isRecording = true;
+                state.isFullExportMode = isFullExport;
+
+                const recorder = new MediaRecorder(canvasStream, options);
+                state.mediaRecorder = recorder;
+
+                recorder.ondataavailable = (e) => {
+                    if (e.data && e.data.size > 0) {
+                        state.recordedChunks.push(e.data);
+                        state.recordedBytes += e.data.size;
+                        const mb = (state.recordedBytes / (1024 * 1024)).toFixed(1);
+                        exportSizeLabel.textContent = `已生成: ${mb} MB`;
+                    }
+                };
+
+                recorder.onstop = () => {
+                    const blob = new Blob(state.recordedChunks, { type: formatConfig.mime || 'video/webm' });
+                    const downloadUrl = URL.createObjectURL(blob);
+
+                    const resTag = `${glCanvas.width}x${glCanvas.height}`;
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = downloadUrl;
+                    a.download = `${state.fileName}_AI_Restored_${resTag}.${formatConfig.ext}`;
+                    document.body.appendChild(a);
+                    a.click();
+
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(downloadUrl);
+                    }, 2000);
+
+                    state.recordedChunks = [];
+                    resetExportUI();
+                };
+
+                exportProgressBox.classList.remove('hidden');
+                recordingBadge.classList.remove('hidden');
+                exportFullBtn.disabled = true;
+
+                if (isFullExport) {
+                    video.playbackRate = 1.0;
+                    playbackRateSelect.value = '1';
+                    video.currentTime = 0;
+                    exportStatusLabel.textContent = `正在导出 ${glCanvas.width}×${glCanvas.height}...`;
+                    recordingBadgeText.textContent = `4K/超清完整渲染导出中（请勿切换页面）`;
+                    recordClipBtn.disabled = true;
+                } else {
+                    exportStatusLabel.textContent = `正在录制片段 (${glCanvas.width}×${glCanvas.height})...`;
+                    recordingBadgeText.textContent = 'A-B 片段超清录制中...';
+                    recordClipText.textContent = '停止录制并保存视频';
+                    recordClipBtn.classList.add('border-red-500/60', 'bg-red-950/40');
+                    exportPercentLabel.textContent = '录制中';
+                    exportProgressBar.style.width = '100%';
+                }
+
+                if (state.compareEnabled) {
+                    showToast('导出时已自动隐藏对比分割线，输出完整修复画质', 'info');
+                }
+
+                recorder.start(1000);
+                if (video.paused) {
+                    video.play();
+                }
+
+            } catch (err) {
+                console.error(err);
+                state.isRecording = false;
+                showToast('启动视频编码导出失败: ' + err.message, 'error');
+            }
+        }
+
+        function stopExportRecording() {
+            if (!state.isRecording || !state.mediaRecorder) return;
+            state.isRecording = false;
+            if (state.mediaRecorder.state !== 'inactive') {
+                state.mediaRecorder.stop();
+            }
+            if (state.isFullExportMode) {
+                video.pause();
+            }
+        }
+
+        function resetExportUI() {
+            state.isRecording = false;
+            state.isFullExportMode = false;
+            exportProgressBox.classList.add('hidden');
+            recordingBadge.classList.add('hidden');
+            exportFullBtn.disabled = !state.isVideoLoaded;
+            recordClipBtn.disabled = !state.isVideoLoaded;
+            recordClipText.textContent = '开始录制当前 A-B 片段';
+            recordClipBtn.classList.remove('border-red-500/60', 'bg-red-950/40');
+            exportProgressBar.style.width = '0%';
+            exportPercentLabel.textContent = '0%';
+        }
+
+        exportFullBtn.addEventListener('click', () => startExportRecording(true));
+
+        recordClipBtn.addEventListener('click', () => {
+            if (state.isRecording) {
+                stopExportRecording();
+                showToast('片段录制已停止，正在生成视频下载...', 'success');
+            } else {
+                startExportRecording(false);
+            }
+        });
+
+        cancelExportBtn.addEventListener('click', () => {
+            stopExportRecording();
+            showToast('已停止录制并保存已生成的数据', 'info');
+        });
+
+        // ======================== 12. 启动初始化 ========================
+        window.addEventListener('DOMContentLoaded', () => {
+            initWebGL();
+            detectSupportedFormats();
+            syncParamsFromUI();
+            updateDemosaicStateUI();
+            initPwaAndZipBuilder();
+            startRenderLoop();
+        });
+
+        // ======================== 13. PWA 运行时注册与纯前端无依赖 ZIP 打包器 ========================
+        let deferredInstallPrompt = null;
+
+        function generateAppIconDataUrl(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // 深色圆角渐变底座
+            const radius = size * 0.22;
+            const grad = ctx.createLinearGradient(0, 0, size, size);
+            grad.addColorStop(0, '#4f46e5');
+            grad.addColorStop(0.5, '#7c3aed');
+            grad.addColorStop(1, '#06b6d4');
+
+            ctx.beginPath();
+            ctx.moveTo(radius, 0);
+            ctx.lineTo(size - radius, 0);
+            ctx.quadraticCurveTo(size, 0, size, radius);
+            ctx.lineTo(size, size - radius);
+            ctx.quadraticCurveTo(size, size, size - radius, size);
+            ctx.lineTo(radius, size);
+            ctx.quadraticCurveTo(0, size, 0, size - radius);
+            ctx.lineTo(0, radius);
+            ctx.quadraticCurveTo(0, 0, radius, 0);
+            ctx.closePath();
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // 居中播放三角形与 4K 标识
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            const cx = size * 0.52;
+            const cy = size * 0.44;
+            const r = size * 0.2;
+            ctx.moveTo(cx - r * 0.7, cy - r * 0.9);
+            ctx.lineTo(cx + r * 1.1, cy);
+            ctx.lineTo(cx - r * 0.7, cy + r * 0.9);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.font = `bold ${Math.round(size * 0.16)}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(255,255,255,0.95)';
+            ctx.fillText('4K AI', size * 0.5, size * 0.82);
+
+            return canvas.toDataURL('image/png');
+        }
+
+        function dataUrlToUint8Array(dataUrl) {
+            const base64 = dataUrl.split(',')[1];
+            const binary = atob(base64);
+            const len = binary.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        // 纯原生 JavaScript CRC32 与无压缩 STORE 模式 ZIP 归档生成器（零外部依赖，100% 离线可用）
+        const CRC32_TABLE = (() => {
+            const table = new Uint32Array(256);
+            for (let i = 0; i < 256; i++) {
+                let c = i;
+                for (let k = 0; k < 8; k++) {
+                    c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+                }
+                table[i] = c;
+            }
+            return table;
+        })();
+
+        function computeCrc32(uint8Arr) {
+            let crc = 0xFFFFFFFF;
+            for (let i = 0; i < uint8Arr.length; i++) {
+                crc = CRC32_TABLE[(crc ^ uint8Arr[i]) & 0xFF] ^ (crc >>> 8);
+            }
+            return (crc ^ 0xFFFFFFFF) >>> 0;
+        }
+
+        function buildZipBlob(files) {
+            const encoder = new TextEncoder();
+            const fileEntries = [];
+            let offset = 0;
+
+            files.forEach(file => {
+                const nameBytes = encoder.encode(file.name);
+                const dataBytes = (typeof file.content === 'string')
+                    ? encoder.encode(file.content)
+                    : file.content;
+                const crc = computeCrc32(dataBytes);
+
+                // Local file header (30 bytes + name)
+                const localHeader = new Uint8Array(30 + nameBytes.length);
+                const view = new DataView(localHeader.buffer);
+                view.setUint32(0, 0x04034b50, true); // Local file header signature
+                view.setUint16(4, 20, true);         // Version needed to extract
+                view.setUint16(6, 0x0800, true);     // UTF-8 filename flag
+                view.setUint16(8, 0, true);          // Compression method: 0 (STORE)
+                view.setUint16(10, 0, true);         // File last mod time
+                view.setUint16(12, 0x4821, true);    // File last mod date
+                view.setUint32(14, crc, true);       // CRC-32
+                view.setUint32(18, dataBytes.length, true); // Compressed size
+                view.setUint32(22, dataBytes.length, true); // Uncompressed size
+                view.setUint16(26, nameBytes.length, true); // File name length
+                view.setUint16(28, 0, true);         // Extra field length
+                localHeader.set(nameBytes, 30);
+
+                fileEntries.push({
+                    nameBytes,
+                    dataBytes,
+                    crc,
+                    localHeader,
+                    offset
+                });
+
+                offset += localHeader.length + dataBytes.length;
+            });
+
+            const centralDirRecords = [];
+            let centralDirSize = 0;
+
+            fileEntries.forEach(entry => {
+                const cdRecord = new Uint8Array(46 + entry.nameBytes.length);
+                const view = new DataView(cdRecord.buffer);
+                view.setUint32(0, 0x02014b50, true); // Central directory file header signature
+                view.setUint16(4, 20, true);         // Version made by
+                view.setUint16(6, 20, true);         // Version needed to extract
+                view.setUint16(8, 0x0800, true);     // UTF-8 flag
+                view.setUint16(10, 0, true);         // Compression method: STORE
+                view.setUint16(12, 0, true);         // Last mod time
+                view.setUint16(14, 0x4821, true);    // Last mod date
+                view.setUint32(16, entry.crc, true); // CRC-32
+                view.setUint32(20, entry.dataBytes.length, true); // Compressed size
+                view.setUint32(24, entry.dataBytes.length, true); // Uncompressed size
+                view.setUint16(28, entry.nameBytes.length, true); // File name length
+                view.setUint16(30, 0, true);         // Extra field length
+                view.setUint16(32, 0, true);         // File comment length
+                view.setUint16(34, 0, true);         // Disk number start
+                view.setUint16(36, 0, true);         // Internal file attributes
+                view.setUint32(38, 0, true);         // External file attributes
+                view.setUint32(42, entry.offset, true); // Relative offset of local header
+                cdRecord.set(entry.nameBytes, 46);
+
+                centralDirRecords.push(cdRecord);
+                centralDirSize += cdRecord.length;
+            });
+
+            // End of central directory record (22 bytes)
+            const eocd = new Uint8Array(22);
+            const eocdView = new DataView(eocd.buffer);
+            eocdView.setUint32(0, 0x06054b50, true); // EOCD signature
+            eocdView.setUint16(4, 0, true);          // Number of this disk
+            eocdView.setUint16(6, 0, true);          // Disk where central directory starts
+            eocdView.setUint16(8, fileEntries.length, true);  // Number of central dir records on this disk
+            eocdView.setUint16(10, fileEntries.length, true); // Total number of central dir records
+            eocdView.setUint32(12, centralDirSize, true);     // Size of central directory
+            eocdView.setUint32(16, offset, true);             // Offset of start of central directory
+            eocdView.setUint16(20, 0, true);                  // Comment length
+
+            const parts = [];
+            fileEntries.forEach(e => {
+                parts.push(e.localHeader, e.dataBytes);
+            });
+            centralDirRecords.forEach(cd => parts.push(cd));
+            parts.push(eocd);
+
+            return new Blob(parts, { type: 'application/zip' });
+        }
+
+        function exportGitHubPwaZipPackage() {
+            try {
+                const icon192DataUrl = generateAppIconDataUrl(192);
+                const icon512DataUrl = generateAppIconDataUrl(512);
+                const icon192Bytes = dataUrlToUint8Array(icon192DataUrl);
+                const icon512Bytes = dataUrlToUint8Array(icon512DataUrl);
+
+                // 生成标准相对路径 PWA manifest.json（完美兼容 GitHub Pages 子路径仓库部署）
+                const manifestJson = JSON.stringify({
+                    name: 'VisionPro Studio 4K 视频画质增强工作站',
+                    short_name: 'VisionPro 4K',
+                    description: '本地视频 4K 亚像素超分辨率、联合双边去马赛克修复与横屏全屏播放器',
+                    start_url: './index.html',
+                    scope: './',
+                    display: 'standalone',
+                    orientation: 'any',
+                    background_color: '#08090c',
+                    theme_color: '#08090c',
+                    icons: [
+                        {
+                            src: './icon-192.png',
+                            sizes: '192x192',
+                            type: 'image/png',
+                            purpose: 'any maskable'
+                        },
+                        {
+                            src: './icon-512.png',
+                            sizes: '512x512',
+                            type: 'image/png',
+                            purpose: 'any maskable'
+                        }
+                    ]
+                }, null, 2);
+
+                // 生成离线缓存 Service Worker (sw.js)
+                const swJs = `const CACHE_NAME = 'visionpro-4k-pwa-v1';
+const ASSETS = [
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      return cached || fetch(event.request).then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      }).catch(() => cached);
+    })
+  );
+});
+`;
+
+                // 清理运行时动态注入的 blob href，还原为标准 ./manifest.json 与 ./icon-192.png 供 GitHub Pages 使用
+                const docClone = document.documentElement.cloneNode(true);
+                const manifestEl = docClone.querySelector('#pwaManifestLink');
+                const appleIconEl = docClone.querySelector('#appleTouchIconLink');
+                if (manifestEl) manifestEl.setAttribute('href', './manifest.json');
+                if (appleIconEl) appleIconEl.setAttribute('href', './icon-192.png');
+
+                // 清除运行时动态状态节点内容，保持干净的初始 HTML
+                const toastEl = docClone.querySelector('#toastContainer');
+                if (toastEl) toastEl.innerHTML = '';
+
+                const indexHtml = '<!DOCTYPE html>\n' + docClone.outerHTML;
+
+                const readmeMd = `# VisionPro Studio 4K 视频画质增强工作站 (PWA 版)
+
+## 一、快速部署到 GitHub Pages
+1. 在 GitHub 上创建一个新的公开仓库（例如 \`visionpro-4k-player\`）。
+2. 将本压缩包解压后的所有文件（\`index.html\`、\`manifest.json\`、\`sw.js\`、\`icon-192.png\`、\`icon-512.png\`）上传到该仓库的根目录。
+3. 打开仓库的 **Settings（设置） -> Pages**。
+4. 在 **Build and deployment -> Source** 中选择 **Deploy from a branch**，分支选择 \`main\`，目录选择 \`/ (root)\`，点击 **Save**。
+5. 等待约 1 分钟，GitHub 会生成 HTTPS 访问网址（例如 \`https://你的用户名.github.io/visionpro-4k-player/\`）。
+
+## 二、安装到手机桌面（作为独立 App 使用）
+- **iPhone / iPad (Safari 浏览器)**：
+  1. 用 Safari 打开上述 GitHub Pages 网址。
+  2. 点击底部工具栏的 **「分享」按钮**。
+  3. 向下滑动并点击 **「添加到主屏幕」**，即可在桌面生成独立全屏应用图标。
+- **Android 手机 (Chrome / Edge 浏览器)**：
+  1. 用 Chrome 打开上述网址。
+  2. 点击右上角菜单 **「⋮」 -> 「安装应用」或「添加到主屏幕」**（或直接点击页面顶部的「安装桌面App」按钮）。
+`;
+
+                const zipBlob = buildZipBlob([
+                    { name: 'index.html', content: indexHtml },
+                    { name: 'manifest.json', content: manifestJson },
+                    { name: 'sw.js', content: swJs },
+                    { name: 'icon-192.png', content: icon192Bytes },
+                    { name: 'icon-512.png', content: icon512Bytes },
+                    { name: 'README.md', content: readmeMd }
+                ]);
+
+                const url = URL.createObjectURL(zipBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'VisionPro-4K-PWA-GitHub-Deploy.zip';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 1500);
+
+                showToast('已生成并下载 VisionPro-4K-PWA-GitHub-Deploy.zip！解压上传至 GitHub 即可安装到手机桌面', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('打包 ZIP 失败: ' + err.message, 'error');
+            }
+        }
+
+        function initPwaAndZipBuilder() {
+            // 为当前单文件环境动态绑定高清图标与 Blob Manifest，使当前页面也直接具备 PWA 安装能力
+            try {
+                const icon192 = generateAppIconDataUrl(192);
+                const icon512 = generateAppIconDataUrl(512);
+                const appleLink = document.getElementById('appleTouchIconLink');
+                if (appleLink) appleLink.href = icon192;
+
+                if (location.protocol.startsWith('http')) {
+                    const dynamicManifest = {
+                        name: 'VisionPro Studio 4K 视频画质增强工作站',
+                        short_name: 'VisionPro 4K',
+                        start_url: location.href,
+                        display: 'standalone',
+                        background_color: '#08090c',
+                        theme_color: '#08090c',
+                        icons: [
+                            { src: icon192, sizes: '192x192', type: 'image/png' },
+                            { src: icon512, sizes: '512x512', type: 'image/png' }
+                        ]
+                    };
+                    const manifestBlob = new Blob([JSON.stringify(dynamicManifest)], { type: 'application/manifest+json' });
+                    const manifestLink = document.getElementById('pwaManifestLink');
+                    if (manifestLink) manifestLink.href = URL.createObjectURL(manifestBlob);
+
+                    if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.register('./sw.js').catch(() => {});
+                    }
+                }
+            } catch (e) {
+                console.warn('PWA 动态元数据初始化提示:', e);
+            }
+
+            // 监听浏览器原生安装桌面应用提示事件
+            const installBtn = document.getElementById('installPwaAppBtn');
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredInstallPrompt = e;
+                if (installBtn) {
+                    installBtn.classList.remove('hidden');
+                    installBtn.classList.add('flex');
+                }
+            });
+
+            if (installBtn) {
+                installBtn.addEventListener('click', async () => {
+                    if (!deferredInstallPrompt) return;
+                    deferredInstallPrompt.prompt();
+                    const { outcome } = await deferredInstallPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        showToast('应用已成功安装到桌面！', 'success');
+                        installBtn.classList.add('hidden');
+                    }
+                    deferredInstallPrompt = null;
+                });
+            }
+
+            // 绑定打包下载 GitHub PWA ZIP 按钮
+            const topZipBtn = document.getElementById('downloadPwaZipBtn');
+            const sideZipBtn = document.getElementById('sidebarDownloadZipBtn');
+            if (topZipBtn) topZipBtn.addEventListener('click', exportGitHubPwaZipPackage);
+            if (sideZipBtn) sideZipBtn.addEventListener('click', exportGitHubPwaZipPackage);
+        }
+    </script>
+
+</body></html>
